@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.bus.controller.admin.product;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
+import cn.iocoder.yudao.framework.encrypt.core.annotation.ApiEncrypt;
 import cn.iocoder.yudao.module.bus.controller.admin.product.vo.*;
 import cn.iocoder.yudao.module.bus.dal.dataobject.product.ProductServiceDO;
 import cn.iocoder.yudao.module.bus.service.product.ProductService;
@@ -59,6 +60,7 @@ public class ProductServiceController {
         return success(true);
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/get")
     @Operation(summary = "获得产品与服务")
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
@@ -74,6 +76,7 @@ public class ProductServiceController {
         return success(respVO);
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/page")
     @Operation(summary = "获得产品与服务分页")
     @PreAuthorize("@ss.hasPermission('bus:product-service:query')")
@@ -82,6 +85,7 @@ public class ProductServiceController {
         return success(BeanUtils.toBean(pageResult, ProductServiceRespVO.class));
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/simple-list")
     @Operation(summary = "获取产品与服务精简列表", description = "用于下拉选择")
     public CommonResult<List<ProductServiceSimpleRespVO>> getProductSimpleList() {

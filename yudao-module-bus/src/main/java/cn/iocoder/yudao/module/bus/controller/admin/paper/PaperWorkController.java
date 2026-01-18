@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.bus.controller.admin.paper;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
+import cn.iocoder.yudao.framework.encrypt.core.annotation.ApiEncrypt;
 import cn.iocoder.yudao.module.bus.controller.admin.paper.vo.*;
 import cn.iocoder.yudao.module.bus.dal.dataobject.paper.PaperWorkDO;
 import cn.iocoder.yudao.module.bus.service.paper.PaperWorkService;
@@ -61,6 +62,7 @@ public class PaperWorkController {
         return success(true);
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/get")
     @Operation(summary = "获得论文与著作")
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
@@ -76,6 +78,7 @@ public class PaperWorkController {
     }
 
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/page")
     @Operation(summary = "获得论文与著作分页")
     @PreAuthorize("@ss.hasPermission('bus:paper-work:query')")
@@ -84,6 +87,7 @@ public class PaperWorkController {
         return success(BeanUtils.toBean(pageResult, PaperWorkRespVO.class));
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/simple-list")
     @Operation(summary = "获取论文与著作精简列表", description = "用于下拉选择")
     public CommonResult<List<PaperWorkSimpleRespVO>> getPaperSimpleList() {

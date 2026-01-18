@@ -16,6 +16,11 @@ import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.List;
 
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.starter.annotation.LogRecord;
+import com.mzt.logapi.service.impl.DiffParseFunction;
+import static cn.iocoder.yudao.module.bus.enums.LogRecordConstants.*;
+
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.bus.enums.ErrorCodeConstants.RESEARCH_PLATFORM_NOT_EXISTS;
 
@@ -33,6 +38,8 @@ public class ResearchPlatformServiceImpl implements ResearchPlatformService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_PLATFORM_TYPE, subType = BUS_PLATFORM_CREATE_SUB_TYPE, bizNo = "{{#platform.id}}",
+            success = BUS_PLATFORM_CREATE_SUCCESS)
     public Long createPlatform(ResearchPlatformSaveReqVO createReqVO) {
         ResearchPlatformDO platform = BeanUtils.toBean(createReqVO, ResearchPlatformDO.class);
         platformMapper.insert(platform);
@@ -40,29 +47,47 @@ public class ResearchPlatformServiceImpl implements ResearchPlatformService {
         // 保存人员关联
         savePlatformStaff(platform.getId(), createReqVO.getStaffIds());
         
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("platform", platform);
         return platform.getId();
     }
 
+
+
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_PLATFORM_TYPE, subType = BUS_PLATFORM_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = BUS_PLATFORM_UPDATE_SUCCESS)
     public void updatePlatform(ResearchPlatformSaveReqVO updateReqVO) {
-        validatePlatformExists(updateReqVO.getId());
+        ResearchPlatformDO platform = validatePlatformExists(updateReqVO.getId());
+        
+        // 记录操作日志上下文 - 旧对象
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(platform, ResearchPlatformSaveReqVO.class));
+        
         ResearchPlatformDO updateObj = BeanUtils.toBean(updateReqVO, ResearchPlatformDO.class);
         platformMapper.updateById(updateObj);
         
         // 更新人员关联
         achievementStaffMapper.deleteByAchievementIdAndType(updateReqVO.getId(), "PLATFORM");
         savePlatformStaff(updateReqVO.getId(), updateReqVO.getStaffIds());
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("platform", platform);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_PLATFORM_TYPE, subType = BUS_PLATFORM_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_PLATFORM_DELETE_SUCCESS)
     public void deletePlatform(Long id) {
-        validatePlatformExists(id);
+        ResearchPlatformDO platform = validatePlatformExists(id);
         platformMapper.deleteById(id);
         
         // 删除人员关联
         achievementStaffMapper.deleteByAchievementIdAndType(id, "PLATFORM");
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("platform", platform);
     }
 
     @Override
@@ -74,15 +99,23 @@ public class ResearchPlatformServiceImpl implements ResearchPlatformService {
         });
     }
 
-    private void validatePlatformExists(Long id) {
-        if (platformMapper.selectById(id) == null) {
+    private ResearchPlatformDO validatePlatformExists(Long id) {
+        ResearchPlatformDO platform = platformMapper.selectById(id);
+        if (platform == null) {
             throw exception(RESEARCH_PLATFORM_NOT_EXISTS);
         }
+        return platform;
     }
 
     @Override
+    @LogRecord(type = BUS_PLATFORM_TYPE, subType = BUS_PLATFORM_VIEW_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_PLATFORM_VIEW_SUCCESS)
     public ResearchPlatformDO getPlatform(Long id) {
-        return platformMapper.selectById(id);
+        ResearchPlatformDO platform = platformMapper.selectById(id);
+        if (platform != null) {
+            LogRecordContext.putVariable("platform", platform);
+        }
+        return platform;
     }
 
     @Override

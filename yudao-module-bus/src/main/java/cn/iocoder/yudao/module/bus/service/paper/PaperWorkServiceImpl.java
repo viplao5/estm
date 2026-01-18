@@ -19,6 +19,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.starter.annotation.LogRecord;
+import com.mzt.logapi.service.impl.DiffParseFunction;
+import static cn.iocoder.yudao.module.bus.enums.LogRecordConstants.*;
+
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.bus.enums.ErrorCodeConstants.PAPER_WORK_NOT_EXISTS;
 
@@ -36,6 +41,8 @@ public class PaperWorkServiceImpl implements PaperWorkService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_PAPER_TYPE, subType = BUS_PAPER_CREATE_SUB_TYPE, bizNo = "{{#paper.id}}",
+            success = BUS_PAPER_CREATE_SUCCESS)
     public Long createPaper(PaperWorkSaveReqVO createReqVO) {
         PaperWorkDO paper = BeanUtils.toBean(createReqVO, PaperWorkDO.class);
         paperMapper.insert(paper);
@@ -45,14 +52,24 @@ public class PaperWorkServiceImpl implements PaperWorkService {
         // 保存关联项目
         savePaperProjects(paper.getId(), createReqVO.getProjectIds());
         
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("paper", paper);
         return paper.getId();
     }
 
 
+
+
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_PAPER_TYPE, subType = BUS_PAPER_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = BUS_PAPER_UPDATE_SUCCESS)
     public void updatePaper(PaperWorkSaveReqVO updateReqVO) {
-        validatePaperExists(updateReqVO.getId());
+        PaperWorkDO paper = validatePaperExists(updateReqVO.getId());
+        
+        // 记录操作日志上下文 - 旧对象
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(paper, PaperWorkSaveReqVO.class));
+        
         PaperWorkDO updateObj = BeanUtils.toBean(updateReqVO, PaperWorkDO.class);
         paperMapper.updateById(updateObj);
         
@@ -63,19 +80,27 @@ public class PaperWorkServiceImpl implements PaperWorkService {
         // 更新关联项目
         projectAchievementMapper.deleteByAchievementIdAndType(updateReqVO.getId(), "PAPER");
         savePaperProjects(updateReqVO.getId(), updateReqVO.getProjectIds());
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("paper", paper);
     }
 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_PAPER_TYPE, subType = BUS_PAPER_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_PAPER_DELETE_SUCCESS)
     public void deletePaper(Long id) {
-        validatePaperExists(id);
+        PaperWorkDO paper = validatePaperExists(id);
         paperMapper.deleteById(id);
         
         // 删除作者关联
         achievementStaffMapper.deleteByAchievementIdAndType(id, "PAPER");
         // 删除关联项目
         projectAchievementMapper.deleteByAchievementIdAndType(id, "PAPER");
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("paper", paper);
     }
 
     @Override
@@ -89,15 +114,23 @@ public class PaperWorkServiceImpl implements PaperWorkService {
     }
 
 
-    private void validatePaperExists(Long id) {
-        if (paperMapper.selectById(id) == null) {
+    private PaperWorkDO validatePaperExists(Long id) {
+        PaperWorkDO paper = paperMapper.selectById(id);
+        if (paper == null) {
             throw exception(PAPER_WORK_NOT_EXISTS);
         }
+        return paper;
     }
 
     @Override
+    @LogRecord(type = BUS_PAPER_TYPE, subType = BUS_PAPER_VIEW_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_PAPER_VIEW_SUCCESS)
     public PaperWorkDO getPaper(Long id) {
-        return paperMapper.selectById(id);
+        PaperWorkDO paper = paperMapper.selectById(id);
+        if (paper != null) {
+            LogRecordContext.putVariable("paper", paper);
+        }
+        return paper;
     }
 
     @Override

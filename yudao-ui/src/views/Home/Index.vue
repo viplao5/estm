@@ -1,422 +1,256 @@
 <template>
-  <div>
-    <el-card shadow="never">
-      <el-skeleton :loading="loading" animated>
-        <el-row :gutter="16" justify="space-between">
-          <el-col :xl="12" :lg="12" :md="12" :sm="24" :xs="24">
-            <div class="flex items-center">
-              <el-avatar :src="avatar" :size="70" class="mr-16px">
-                <img src="@/assets/imgs/avatar.gif" alt="" />
-              </el-avatar>
-              <div>
-                <div class="text-20px">
-                  {{ t('workplace.welcome') }} {{ username }} {{ t('workplace.happyDay') }}
-                </div>
-                <div class="mt-10px text-14px text-gray-500">
-                  {{ t('workplace.toady') }}，20℃ - 32℃！
-                </div>
-              </div>
+  <div class="dashboard-container">
+    <!-- 欢迎 Banner -->
+    <div class="welcome-banner mb-20px p-20px rounded-8px shadow-sm flex items-center justify-between">
+      <div class="flex items-center">
+        <el-avatar :src="avatar" :size="70" class="mr-20px border-4 border-white shadow-md">
+          <img src="@/assets/imgs/avatar.gif" alt="" />
+        </el-avatar>
+        <div>
+          <div class="text-24px font-bold text-gray-800">
+            {{ t('workplace.welcome') }} {{ username }}，{{ t('workplace.happyDay') }}
+          </div>
+          <div class="mt-8px text-14px text-gray-500">
+            {{ t('workplace.toady') }}，20℃ - 32℃！ | 每一天都是新的开始
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center space-x-32px hidden md:flex">
+        <div class="text-right px-20px">
+          <div class="text-12px text-gray-400 uppercase tracking-wider mb-4px">总成果数</div>
+          <div class="text-30px font-extrabold text-blue-600">
+            <CountTo :start-val="0" :end-val="totalAchievementCount" :duration="2000" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 业务模块工作台 (Grid Layout for 10 items) -->
+    <div class="mb-20px">
+      <div class="flex items-center mb-16px px-4px border-l-4 border-blue-500 pl-12px">
+        <h3 class="text-18px font-bold text-gray-800 m-0">业务工作台</h3>
+      </div>
+      <div class="module-grid">
+        <div
+          v-for="(item, index) in moduleCards"
+          :key="`module-${index}`"
+          class="module-card bg-white p-20px rounded-8px shadow-sm hover:shadow-lg transition-all cursor-pointer group border border-gray-100 flex flex-col items-center justify-center"
+          @click="handleModuleClick(item.path)"
+        >
+          <div 
+            class="w-56px h-56px rounded-full flex items-center justify-center mb-12px group-hover:scale-110 transition-transform duration-300"
+            :style="{ backgroundColor: item.bg }"
+          >
+             <Icon :icon="item.icon" :size="28" :color="item.color" />
+          </div>
+          <div class="text-14px font-medium text-gray-600 mb-4px">{{ item.name }}</div>
+          <div class="text-24px font-bold text-gray-800">
+            <CountTo :start-val="0" :end-val="item.count" :duration="2000" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 通知与提醒 (Split View) -->
+    <el-row :gutter="20">
+      <!-- 失效提醒 (Task Reminders) -->
+      <el-col :span="12" :xs="24" class="mb-20px">
+        <el-card shadow="never" class="h-full border-0 shadow-sm rounded-8px" :body-style="{ padding: '0' }">
+          <template #header>
+            <div class="flex justify-between items-center px-8px py-4px">
+              <span class="text-16px font-bold flex items-center text-gray-800">
+                <Icon icon="ep:bell-filled" class="mr-8px text-red-500" />
+                失效提醒
+              </span>
+              <el-tag type="danger" effect="plain" round v-if="reminderList.length > 0">
+                {{ reminderList.length }} 待处理
+              </el-tag>
             </div>
-          </el-col>
-          <el-col :xl="12" :lg="12" :md="12" :sm="24" :xs="24">
-            <div class="h-70px flex items-center justify-end lt-sm:mt-10px">
-              <div class="px-8px text-right">
-                <div class="mb-16px text-14px text-gray-400">{{ t('workplace.project') }}</div>
-                <CountTo
-                  class="text-20px"
-                  :start-val="0"
-                  :end-val="totalSate.project"
-                  :duration="2600"
-                />
+          </template>
+          <div class="p-16px bg-white min-h-300px">
+            <el-scrollbar max-height="300px">
+              <div v-if="reminderList.length > 0">
+                <div v-for="(item, index) in reminderList" :key="index" 
+                     class="py-12px px-8px border-b last:border-0 border-gray-50 hover:bg-red-50 transition-colors rounded-sm cursor-pointer group">
+                  <div class="flex justify-between items-start">
+                    <div class="flex-1 mr-16px">
+                      <div class="text-14px text-gray-800 group-hover:text-red-600 font-medium mb-4px line-clamp-1">
+                        {{ item.title }}
+                      </div>
+                    </div>
+                    <div class="text-12px text-gray-400 whitespace-nowrap">{{ formatTime(item.createTime, 'yyyy-MM-dd') }}</div>
+                  </div>
+                </div>
               </div>
-              <el-divider direction="vertical" />
-              <div class="px-8px text-right">
-                <div class="mb-16px text-14px text-gray-400">{{ t('workplace.toDo') }}</div>
-                <CountTo
-                  class="text-20px"
-                  :start-val="0"
-                  :end-val="totalSate.todo"
-                  :duration="2600"
-                />
-              </div>
-              <el-divider direction="vertical" border-style="dashed" />
-              <div class="px-8px text-right">
-                <div class="mb-16px text-14px text-gray-400">{{ t('workplace.access') }}</div>
-                <CountTo
-                  class="text-20px"
-                  :start-val="0"
-                  :end-val="totalSate.access"
-                  :duration="2600"
-                />
-              </div>
+              <el-empty v-else description="暂无需要处理的提醒" :image-size="80" />
+            </el-scrollbar>
+          </div>
+        </el-card>
+      </el-col>
+
+      <!-- 系统通知 (System Notifications) -->
+      <el-col :span="12" :xs="24" class="mb-20px">
+        <el-card shadow="never" class="h-full border-0 shadow-sm rounded-8px" :body-style="{ padding: '0' }">
+          <template #header>
+            <div class="flex justify-between items-center px-8px py-4px">
+              <span class="text-16px font-bold flex items-center text-gray-800">
+                <Icon icon="ep:notification" class="mr-8px text-blue-500" />
+                系统通知
+              </span>
+              <el-link type="primary" :underline="false">查看更多</el-link>
             </div>
-          </el-col>
-        </el-row>
-      </el-skeleton>
-    </el-card>
+          </template>
+           <div class="p-16px bg-white min-h-300px">
+             <el-scrollbar max-height="300px">
+              <div v-if="systemNoticeList.length > 0">
+                <div v-for="(item, index) in systemNoticeList" :key="index" 
+                     class="py-12px px-8px border-b last:border-0 border-gray-50 hover:bg-blue-50 transition-colors rounded-sm cursor-pointer group">
+                  <div class="flex justify-between items-start">
+                    <div class="flex-1 mr-16px">
+                       <div class="text-14px text-gray-800 group-hover:text-blue-600 font-medium mb-4px line-clamp-1">
+                        {{ item.title }}
+                      </div>
+                    </div>
+                    <div class="text-12px text-gray-400 whitespace-nowrap">{{ formatTime(item.createTime, 'yyyy-MM-dd') }}</div>
+                  </div>
+                </div>
+              </div>
+              <el-empty v-else description="暂无系统通知" :image-size="80" />
+             </el-scrollbar>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
-
-  <el-row class="mt-8px" :gutter="8" justify="space-between">
-    <el-col :xl="16" :lg="16" :md="24" :sm="24" :xs="24" class="mb-8px">
-      <el-card shadow="never">
-        <template #header>
-          <div class="h-3 flex justify-between">
-            <span>{{ t('workplace.project') }}</span>
-            <el-link
-              type="primary"
-              :underline="false"
-              href="https://github.com/yudaocode"
-              target="_blank"
-            >
-              {{ t('action.more') }}
-            </el-link>
-          </div>
-        </template>
-        <el-skeleton :loading="loading" animated>
-          <el-row>
-            <el-col
-              v-for="(item, index) in projects"
-              :key="`card-${index}`"
-              :xl="8"
-              :lg="8"
-              :md="8"
-              :sm="24"
-              :xs="24"
-            >
-              <el-card
-                shadow="hover"
-                class="mr-5px mt-5px cursor-pointer"
-                @click="handleProjectClick(item.message)"
-              >
-                <div class="flex items-center">
-                  <Icon
-                    :icon="item.icon"
-                    :size="25"
-                    class="mr-8px"
-                    :style="{ color: item.color }"
-                  />
-                  <span class="text-16px">{{ item.name }}</span>
-                </div>
-                <div class="mt-12px text-12px text-gray-400">{{ t(item.message) }}</div>
-                <div class="mt-12px flex justify-between text-12px text-gray-400">
-                  <span>{{ item.personal }}</span>
-                  <span>{{ formatTime(item.time, 'yyyy-MM-dd') }}</span>
-                </div>
-              </el-card>
-            </el-col>
-          </el-row>
-        </el-skeleton>
-      </el-card>
-
-      <el-card shadow="never" class="mt-8px">
-        <el-skeleton :loading="loading" animated>
-          <el-row :gutter="20" justify="space-between">
-            <el-col :xl="10" :lg="10" :md="24" :sm="24" :xs="24">
-              <el-card shadow="hover" class="mb-8px">
-                <el-skeleton :loading="loading" animated>
-                  <Echart :options="pieOptionsData" :height="280" />
-                </el-skeleton>
-              </el-card>
-            </el-col>
-            <el-col :xl="14" :lg="14" :md="24" :sm="24" :xs="24">
-              <el-card shadow="hover" class="mb-8px">
-                <el-skeleton :loading="loading" animated>
-                  <Echart :options="barOptionsData" :height="280" />
-                </el-skeleton>
-              </el-card>
-            </el-col>
-          </el-row>
-        </el-skeleton>
-      </el-card>
-    </el-col>
-    <el-col :xl="8" :lg="8" :md="24" :sm="24" :xs="24" class="mb-8px">
-      <el-card shadow="never">
-        <template #header>
-          <div class="h-3 flex justify-between">
-            <span>{{ t('workplace.shortcutOperation') }}</span>
-          </div>
-        </template>
-        <el-skeleton :loading="loading" animated>
-          <el-row>
-            <el-col v-for="item in shortcut" :key="`team-${item.name}`" :span="8" class="mb-8px">
-              <div class="flex items-center">
-                <Icon :icon="item.icon" class="mr-8px" :style="{ color: item.color }" />
-                <el-link type="default" :underline="false" @click="handleShortcutClick(item.url)">
-                  {{ item.name }}
-                </el-link>
-              </div>
-            </el-col>
-          </el-row>
-        </el-skeleton>
-      </el-card>
-      <el-card shadow="never" class="mt-8px">
-        <template #header>
-          <div class="h-3 flex justify-between">
-            <span>{{ t('workplace.notice') }}</span>
-            <el-link type="primary" :underline="false">{{ t('action.more') }}</el-link>
-          </div>
-        </template>
-        <el-skeleton :loading="loading" animated>
-          <div v-for="(item, index) in notice" :key="`dynamics-${index}`">
-            <div class="flex items-center">
-              <el-avatar :src="avatar" :size="35" class="mr-16px">
-                <img src="@/assets/imgs/avatar.gif" alt="" />
-              </el-avatar>
-              <div>
-                <div class="text-14px">
-                  <Highlight :keys="item.keys.map((v) => t(v))">
-                    {{ item.type }} : {{ item.title }}
-                  </Highlight>
-                </div>
-                <div class="mt-16px text-12px text-gray-400">
-                  {{ formatTime(item.date, 'yyyy-MM-dd') }}
-                </div>
-              </div>
-            </div>
-            <el-divider />
-          </div>
-        </el-skeleton>
-      </el-card>
-    </el-col>
-  </el-row>
 </template>
-<script lang="ts" setup>
-import { set } from 'lodash-es'
-import { EChartsOption } from 'echarts'
-import { formatTime } from '@/utils'
 
-import { useUserStore } from '@/store/modules/user'
-// import { useWatermark } from '@/hooks/web/useWatermark'
-import type { WorkplaceTotal, Project, Notice, Shortcut } from './types'
-import { pieOptions, barOptions } from './echarts-data'
+<script lang="ts" setup>
+import { formatTime } from '@/utils'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/store/modules/user'
+import * as BusDashboardApi from '@/api/bus/dashboard'
+import * as NotifyMessageApi from '@/api/system/notify/message'
 
 defineOptions({ name: 'Index' })
 
 const { t } = useI18n()
 const router = useRouter()
 const userStore = useUserStore()
-// const { setWatermark } = useWatermark()
 const loading = ref(true)
-const avatar = userStore.getUser.avatar
-const username = userStore.getUser.nickname
-const pieOptionsData = reactive<EChartsOption>(pieOptions) as EChartsOption
-// 获取统计数
-let totalSate = reactive<WorkplaceTotal>({
-  project: 0,
-  access: 0,
-  todo: 0
-})
 
-const getCount = async () => {
-  const data = {
-    project: 40,
-    access: 2340,
-    todo: 10
+const avatar = computed(() => userStore.getUser.avatar || '@/assets/imgs/avatar.gif')
+const username = computed(() => userStore.getUser.nickname)
+
+// 模块卡片定义 - Added background colors for icon containers
+const moduleCards = reactive([
+  { name: '研发项目', icon: 'ep:folder', color: '#409EFF', bg: '#ecf5ff', count: 0, path: '/bus/project' },
+  { name: '知识产权', icon: 'ep:reading', color: '#67C23A', bg: '#f0f9eb', count: 0, path: '/bus/ip' },
+  { name: '技术秘密', icon: 'ep:lock', color: '#E6A23C', bg: '#fdf6ec', count: 0, path: '/bus/secret' },
+  { name: '论文著作', icon: 'ep:document', color: '#F56C6C', bg: '#fef0f0', count: 0, path: '/bus/paper' },
+  { name: '标准管理', icon: 'ep:guide', color: '#909399', bg: '#f4f4f5', count: 0, path: '/bus/standard' },
+  { name: '科技奖励', icon: 'ep:medal', color: '#E6A23C', bg: '#fdf6ec', count: 0, path: '/bus/award' },
+  { name: '产品与服务', icon: 'ep:goods', color: '#409EFF', bg: '#ecf5ff', count: 0, path: '/bus/product' },
+  { name: '科研平台', icon: 'ep:office-building', color: '#67C23A', bg: '#f0f9eb', count: 0, path: '/bus/platform' },
+  { name: '技术人员', icon: 'ep:user', color: '#F56C6C', bg: '#fef0f0', count: 0, path: '/bus/staff' },
+  { name: '资质管理', icon: 'ep:postcard', color: '#909399', bg: '#f4f4f5', count: 0, path: '/bus/qualification' },
+])
+
+const totalAchievementCount = computed(() => moduleCards.reduce((acc, cur) => acc + cur.count, 0))
+
+// 提醒和通知列表
+const reminderList = ref<any[]>([])
+const systemNoticeList = ref<any[]>([])
+
+const getDashboardData = async () => {
+  try {
+    loading.value = true
+    
+    // 1. 获取统计数据
+    const stats = await BusDashboardApi.getWorkplaceStats()
+    moduleCards[0].count = stats.projectCount
+    moduleCards[1].count = stats.ipCount
+    moduleCards[2].count = stats.secretCount
+    moduleCards[3].count = stats.paperCount
+    moduleCards[4].count = stats.standardCount
+    moduleCards[5].count = stats.awardCount
+    moduleCards[6].count = stats.productCount
+    moduleCards[7].count = stats.platformCount
+    moduleCards[8].count = stats.staffCount
+    moduleCards[9].count = stats.qualificationCount
+
+    // 2. 获取通知消息
+    const notices = await NotifyMessageApi.getUnreadNotifyMessageList()
+    reminderList.value = []
+    systemNoticeList.value = []
+    
+    notices.forEach(item => {
+      const data = {
+        title: item.templateContent,
+        createTime: item.createTime
+      }
+      if (item.templateCode === 'ACHIEVEMENT_EXPIRATION') {
+        reminderList.value.push(data)
+      } else {
+        systemNoticeList.value.push(data)
+      }
+    })
+
+  } catch (e) {
+    console.error('加载首页数据失败', e)
+  } finally {
+    loading.value = false
   }
-  totalSate = Object.assign(totalSate, data)
 }
 
-// 获取项目数
-let projects = reactive<Project[]>([])
-const getProject = async () => {
-  const data = [
-    {
-      name: 'ruoyi-vue-pro',
-      icon: 'simple-icons:springboot',
-      message: 'github.com/YunaiV/ruoyi-vue-pro',
-      personal: 'Spring Boot 单体架构',
-      time: new Date('2025-01-02'),
-      color: '#6DB33F'
-    },
-    {
-      name: 'yudao-ui-admin-vue3',
-      icon: 'ep:element-plus',
-      message: 'github.com/yudaocode/yudao-ui-admin-vue3',
-      personal: 'Vue3 + element-plus 管理后台',
-      time: new Date('2025-02-03'),
-      color: '#409EFF'
-    },
-    {
-      name: 'yudao-ui-mall-uniapp',
-      icon: 'icon-park-outline:mall-bag',
-      message: 'github.com/yudaocode/yudao-ui-mall-uniapp',
-      personal: 'Vue3 + uniapp 商城手机端',
-      time: new Date('2025-03-04'),
-      color: '#ff4d4f'
-    },
-    {
-      name: 'yudao-cloud',
-      icon: 'material-symbols:cloud-outline',
-      message: 'github.com/YunaiV/yudao-cloud',
-      personal: 'Spring Cloud 微服务架构',
-      time: new Date('2025-04-05'),
-      color: '#1890ff'
-    },
-    {
-      name: 'yudao-ui-admin-vben',
-      icon: 'devicon:antdesign',
-      message: 'github.com/yudaocode/yudao-ui-admin-vben',
-      personal: 'Vue3 + vben5(antd) 管理后台',
-      time: new Date('2025-05-06'),
-      color: '#e18525'
-    },
-    {
-      name: 'yudao-ui-admin-uniapp',
-      icon: 'ant-design:mobile',
-      message: 'github.com/yudaocode/yudao-ui-admin-uniapp',
-      personal: 'Vue3 + uniapp 管理手机端',
-      time: new Date('2025-06-01'),
-      color: '#2979ff'
-    }
-  ]
-  projects = Object.assign(projects, data)
+const handleModuleClick = (path: string) => {
+  router.push(path)
 }
 
-// 获取通知公告
-let notice = reactive<Notice[]>([])
-const getNotice = async () => {
-  const data = [
-    {
-      title: '系统支持 JDK 8/17/21，Vue 2/3',
-      type: '技术兼容性',
-      keys: ['JDK', 'Vue'],
-      date: new Date()
-    },
-    {
-      title: '后端提供 Spring Boot 2.7/3.2 + Cloud 双架构',
-      type: '架构灵活性',
-      keys: ['Boot', 'Cloud'],
-      date: new Date()
-    },
-    {
-      title: '全部开源，个人与企业可 100% 直接使用，无需授权',
-      type: '开源免授权',
-      keys: ['无需授权'],
-      date: new Date()
-    },
-    {
-      title: '国内使用最广泛的快速开发平台，远超 10w+ 企业使用',
-      type: '广泛企业认可',
-      keys: ['最广泛', '10w+'],
-      date: new Date()
-    }
-  ]
-  notice = Object.assign(notice, data)
-}
-
-// 获取快捷入口
-let shortcut = reactive<Shortcut[]>([])
-
-const getShortcut = async () => {
-  const data = [
-    {
-      name: '首页',
-      icon: 'ion:home-outline',
-      url: '/',
-      color: '#1fdaca'
-    },
-    {
-      name: '商城中心',
-      icon: 'ep:shop',
-      url: '/mall/home',
-      color: '#ff6b6b'
-    },
-    {
-      name: 'AI 大模型',
-      icon: 'tabler:ai',
-      url: '/ai/chat',
-      color: '#7c3aed'
-    },
-    {
-      name: 'ERP 系统',
-      icon: 'simple-icons:erpnext',
-      url: '/erp/home',
-      color: '#3fb27f'
-    },
-    {
-      name: 'CRM 系统',
-      icon: 'simple-icons:civicrm',
-      url: '/crm/backlog',
-      color: '#4daf1bc9'
-    },
-    {
-      name: 'IoT 物联网',
-      icon: 'fa-solid:hdd',
-      url: '/iot/home',
-      color: '#1a73e8'
-    }
-  ]
-  shortcut = Object.assign(shortcut, data)
-}
-
-// 用户来源
-const getUserAccessSource = async () => {
-  const data = [
-    { value: 335, name: 'analysis.directAccess' },
-    { value: 310, name: 'analysis.mailMarketing' },
-    { value: 234, name: 'analysis.allianceAdvertising' },
-    { value: 135, name: 'analysis.videoAdvertising' },
-    { value: 1548, name: 'analysis.searchEngines' }
-  ]
-  set(
-    pieOptionsData,
-    'legend.data',
-    data.map((v) => t(v.name))
-  )
-  pieOptionsData!.series![0].data = data.map((v) => {
-    return {
-      name: t(v.name),
-      value: v.value
-    }
-  })
-}
-const barOptionsData = reactive<EChartsOption>(barOptions) as EChartsOption
-
-// 周活跃量
-const getWeeklyUserActivity = async () => {
-  const data = [
-    { value: 13253, name: 'analysis.monday' },
-    { value: 34235, name: 'analysis.tuesday' },
-    { value: 26321, name: 'analysis.wednesday' },
-    { value: 12340, name: 'analysis.thursday' },
-    { value: 24643, name: 'analysis.friday' },
-    { value: 1322, name: 'analysis.saturday' },
-    { value: 1324, name: 'analysis.sunday' }
-  ]
-  set(
-    barOptionsData,
-    'xAxis.data',
-    data.map((v) => t(v.name))
-  )
-  set(barOptionsData, 'series', [
-    {
-      name: t('analysis.activeQuantity'),
-      data: data.map((v) => v.value),
-      type: 'bar'
-    }
-  ])
-}
-
-const getAllApi = async () => {
-  await Promise.all([
-    getCount(),
-    getProject(),
-    getNotice(),
-    getShortcut(),
-    getUserAccessSource(),
-    getWeeklyUserActivity()
-  ])
-  loading.value = false
-}
-
-const handleProjectClick = (message: string) => {
-  window.open(`https://${message}`, '_blank')
-}
-
-const handleShortcutClick = (url: string) => {
-  router.push(url)
-}
-
-getAllApi()
+onMounted(() => {
+  getDashboardData()
+})
 </script>
+
+<style scoped>
+.dashboard-container {
+  padding: 10px;
+  background-color: #f5f7f9;
+  min-height: calc(100vh - 84px);
+}
+.welcome-banner {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+  border-left: 5px solid #409EFF;
+}
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+@media (max-width: 1200px) {
+  .module-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (max-width: 992px) {
+  .module-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 768px) {
+  .module-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .module-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.module-card {
+  transition: all 0.3s;
+}
+.module-card:hover {
+  transform: translateY(-5px);
+}
+</style>
+

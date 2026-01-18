@@ -17,6 +17,11 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.mzt.logapi.service.impl.DiffParseFunction;
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.starter.annotation.LogRecord;
+import static cn.iocoder.yudao.module.bus.enums.LogRecordConstants.*;
+
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.bus.enums.ErrorCodeConstants.STANDARD_NOT_EXISTS;
 
@@ -33,6 +38,8 @@ public class StandardServiceImpl implements StandardService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_STANDARD_TYPE, subType = BUS_STANDARD_CREATE_SUB_TYPE, bizNo = "{{#standard.id}}",
+            success = BUS_STANDARD_CREATE_SUCCESS)
     public Long createStandard(StandardSaveReqVO createReqVO) {
         StandardDO standard = BeanUtils.toBean(createReqVO, StandardDO.class);
         standardMapper.insert(standard);
@@ -42,14 +49,24 @@ public class StandardServiceImpl implements StandardService {
         // 保存关联项目
         saveStandardProjects(standard.getId(), createReqVO.getProjectIds());
         
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("standard", standard);
         return standard.getId();
     }
 
 
+
+
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_STANDARD_TYPE, subType = BUS_STANDARD_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = BUS_STANDARD_UPDATE_SUCCESS)
     public void updateStandard(StandardSaveReqVO updateReqVO) {
-        validateStandardExists(updateReqVO.getId());
+        StandardDO standard = validateStandardExists(updateReqVO.getId());
+        
+        // 记录操作日志上下文 - 旧对象
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(standard, StandardSaveReqVO.class));
+        
         StandardDO updateObj = BeanUtils.toBean(updateReqVO, StandardDO.class);
         standardMapper.updateById(updateObj);
         
@@ -60,19 +77,27 @@ public class StandardServiceImpl implements StandardService {
         // 更新关联项目
         projectAchievementMapper.deleteByAchievementIdAndType(updateReqVO.getId(), "STANDARD");
         saveStandardProjects(updateReqVO.getId(), updateReqVO.getProjectIds());
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("standard", standard);
     }
 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_STANDARD_TYPE, subType = BUS_STANDARD_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_STANDARD_DELETE_SUCCESS)
     public void deleteStandard(Long id) {
-        validateStandardExists(id);
+        StandardDO standard = validateStandardExists(id);
         standardMapper.deleteById(id);
         
         // 删除人员关联
         achievementStaffMapper.deleteByAchievementIdAndType(id, "STANDARD");
         // 删除关联项目
         projectAchievementMapper.deleteByAchievementIdAndType(id, "STANDARD");
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("standard", standard);
     }
 
     @Override
@@ -86,15 +111,23 @@ public class StandardServiceImpl implements StandardService {
     }
 
 
-    private void validateStandardExists(Long id) {
-        if (standardMapper.selectById(id) == null) {
+    private StandardDO validateStandardExists(Long id) {
+        StandardDO standard = standardMapper.selectById(id);
+        if (standard == null) {
             throw exception(STANDARD_NOT_EXISTS);
         }
+        return standard;
     }
 
     @Override
+    @LogRecord(type = BUS_STANDARD_TYPE, subType = BUS_STANDARD_VIEW_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_STANDARD_VIEW_SUCCESS)
     public StandardDO getStandard(Long id) {
-        return standardMapper.selectById(id);
+        StandardDO standard = standardMapper.selectById(id);
+        if (standard != null) {
+            LogRecordContext.putVariable("standard", standard);
+        }
+        return standard;
     }
 
     @Override

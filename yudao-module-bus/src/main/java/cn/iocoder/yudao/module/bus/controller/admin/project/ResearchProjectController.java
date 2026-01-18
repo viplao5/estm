@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.bus.controller.admin.project;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
+import cn.iocoder.yudao.framework.encrypt.core.annotation.ApiEncrypt;
 import cn.iocoder.yudao.module.bus.controller.admin.project.vo.*;
 import cn.iocoder.yudao.module.bus.dal.dataobject.project.ResearchProjectDO;
 import cn.iocoder.yudao.module.bus.service.project.ResearchProjectService;
@@ -61,6 +62,7 @@ public class ResearchProjectController {
         return success(true);
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/get")
     @Operation(summary = "获得研发项目")
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
@@ -77,6 +79,7 @@ public class ResearchProjectController {
     }
 
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/page")
     @Operation(summary = "获得研发项目分页")
     @PreAuthorize("@ss.hasPermission('bus:research-project:query')")
@@ -85,6 +88,7 @@ public class ResearchProjectController {
         return success(BeanUtils.toBean(pageResult, ResearchProjectRespVO.class));
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/simple-list")
     @Operation(summary = "获取研发项目精简列表", description = "用于下拉选择")
     public CommonResult<List<ResearchProjectSimpleRespVO>> getProjectSimpleList() {

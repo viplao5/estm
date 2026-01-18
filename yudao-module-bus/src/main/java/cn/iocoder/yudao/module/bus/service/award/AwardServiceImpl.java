@@ -17,8 +17,13 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.starter.annotation.LogRecord;
+import static cn.iocoder.yudao.module.bus.enums.LogRecordConstants.*;
+
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.bus.enums.ErrorCodeConstants.AWARD_NOT_EXISTS;
+import com.mzt.logapi.service.impl.DiffParseFunction;
 
 @Service
 @Validated
@@ -33,6 +38,8 @@ public class AwardServiceImpl implements AwardService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_AWARD_TYPE, subType = BUS_AWARD_CREATE_SUB_TYPE, bizNo = "{{#award.id}}",
+            success = BUS_AWARD_CREATE_SUCCESS)
     public Long createAward(AwardSaveReqVO createReqVO) {
         AwardDO award = BeanUtils.toBean(createReqVO, AwardDO.class);
         awardMapper.insert(award);
@@ -42,14 +49,24 @@ public class AwardServiceImpl implements AwardService {
         // 保存关联项目
         saveAwardProjects(award.getId(), createReqVO.getProjectIds());
         
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("award", award);
         return award.getId();
     }
 
 
+
+
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_AWARD_TYPE, subType = BUS_AWARD_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = BUS_AWARD_UPDATE_SUCCESS)
     public void updateAward(AwardSaveReqVO updateReqVO) {
-        validateAwardExists(updateReqVO.getId());
+        AwardDO award = validateAwardExists(updateReqVO.getId());
+        
+        // 记录操作日志上下文 - 旧对象
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(award, AwardSaveReqVO.class));
+        
         AwardDO updateObj = BeanUtils.toBean(updateReqVO, AwardDO.class);
         awardMapper.updateById(updateObj);
         
@@ -60,19 +77,27 @@ public class AwardServiceImpl implements AwardService {
         // 更新关联项目
         projectAchievementMapper.deleteByAchievementIdAndType(updateReqVO.getId(), "AWARD");
         saveAwardProjects(updateReqVO.getId(), updateReqVO.getProjectIds());
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("award", award);
     }
 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_AWARD_TYPE, subType = BUS_AWARD_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_AWARD_DELETE_SUCCESS)
     public void deleteAward(Long id) {
-        validateAwardExists(id);
+        AwardDO award = validateAwardExists(id);
         awardMapper.deleteById(id);
         
         // 删除人员关联
         achievementStaffMapper.deleteByAchievementIdAndType(id, "AWARD");
         // 删除关联项目
         projectAchievementMapper.deleteByAchievementIdAndType(id, "AWARD");
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("award", award);
     }
 
     @Override
@@ -86,15 +111,23 @@ public class AwardServiceImpl implements AwardService {
     }
 
 
-    private void validateAwardExists(Long id) {
-        if (awardMapper.selectById(id) == null) {
+    private AwardDO validateAwardExists(Long id) {
+        AwardDO award = awardMapper.selectById(id);
+        if (award == null) {
             throw exception(AWARD_NOT_EXISTS);
         }
+        return award;
     }
 
     @Override
+    @LogRecord(type = BUS_AWARD_TYPE, subType = BUS_AWARD_VIEW_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_AWARD_VIEW_SUCCESS)
     public AwardDO getAward(Long id) {
-        return awardMapper.selectById(id);
+        AwardDO award = awardMapper.selectById(id);
+        if (award != null) {
+            LogRecordContext.putVariable("award", award);
+        }
+        return award;
     }
 
     @Override

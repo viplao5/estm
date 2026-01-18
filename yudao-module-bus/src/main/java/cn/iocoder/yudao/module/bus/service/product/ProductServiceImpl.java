@@ -10,11 +10,16 @@ import cn.iocoder.yudao.module.bus.dal.dataobject.relation.ProductAchievementDO;
 import cn.iocoder.yudao.module.bus.dal.mysql.product.ProductServiceMapper;
 import cn.iocoder.yudao.module.bus.dal.mysql.relation.AchievementStaffMapper;
 import cn.iocoder.yudao.module.bus.dal.mysql.relation.ProductAchievementMapper;
+import com.mzt.logapi.service.impl.DiffParseFunction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import javax.annotation.Resource;
 import java.util.List;
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.starter.annotation.LogRecord;
+import static cn.iocoder.yudao.module.bus.enums.LogRecordConstants.*;
+
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.bus.enums.ErrorCodeConstants.PRODUCT_SERVICE_NOT_EXISTS;
 
@@ -30,6 +35,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_PRODUCT_TYPE, subType = BUS_PRODUCT_CREATE_SUB_TYPE, bizNo = "{{#product.id}}",
+            success = BUS_PRODUCT_CREATE_SUCCESS)
     public Long createProduct(ProductServiceSaveReqVO createReqVO) {
         ProductServiceDO product = BeanUtils.toBean(createReqVO, ProductServiceDO.class);
         productMapper.insert(product);
@@ -39,13 +46,21 @@ public class ProductServiceImpl implements ProductService {
         saveProductAchievements(product.getId(), createReqVO.getIpIds(), "IP");
         saveProductAchievements(product.getId(), createReqVO.getSecretIds(), "SECRET");
 
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("product", product);
         return product.getId();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_PRODUCT_TYPE, subType = BUS_PRODUCT_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = BUS_PRODUCT_UPDATE_SUCCESS)
     public void updateProduct(ProductServiceSaveReqVO updateReqVO) {
-        validateProductExists(updateReqVO.getId());
+        ProductServiceDO product = validateProductExists(updateReqVO.getId());
+        
+        // 记录操作日志上下文 - 旧对象
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(product, ProductServiceSaveReqVO.class));
+        
         ProductServiceDO updateObj = BeanUtils.toBean(updateReqVO, ProductServiceDO.class);
         productMapper.updateById(updateObj);
 
@@ -60,17 +75,25 @@ public class ProductServiceImpl implements ProductService {
         // 更新技术秘密关联
         productAchievementMapper.deleteByProductIdAndType(updateReqVO.getId(), "SECRET");
         saveProductAchievements(updateReqVO.getId(), updateReqVO.getSecretIds(), "SECRET");
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("product", product);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_PRODUCT_TYPE, subType = BUS_PRODUCT_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_PRODUCT_DELETE_SUCCESS)
     public void deleteProduct(Long id) {
-        validateProductExists(id);
+        ProductServiceDO product = validateProductExists(id);
         productMapper.deleteById(id);
 
         // 删除关联关系
         achievementStaffMapper.deleteByAchievementIdAndType(id, "PRODUCT");
         productAchievementMapper.deleteByProductId(id);
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("product", product);
     }
 
     @Override
@@ -131,15 +154,23 @@ public class ProductServiceImpl implements ProductService {
                 ProductAchievementDO::getAchievementId, true);
     }
 
-    private void validateProductExists(Long id) {
-        if (productMapper.selectById(id) == null) {
+    private ProductServiceDO validateProductExists(Long id) {
+        ProductServiceDO product = productMapper.selectById(id);
+        if (product == null) {
             throw exception(PRODUCT_SERVICE_NOT_EXISTS);
         }
+        return product;
     }
 
     @Override
+    @LogRecord(type = BUS_PRODUCT_TYPE, subType = BUS_PRODUCT_VIEW_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_PRODUCT_VIEW_SUCCESS)
     public ProductServiceDO getProduct(Long id) {
-        return productMapper.selectById(id);
+        ProductServiceDO product = productMapper.selectById(id);
+        if (product != null) {
+            LogRecordContext.putVariable("product", product);
+        }
+        return product;
     }
 
     @Override

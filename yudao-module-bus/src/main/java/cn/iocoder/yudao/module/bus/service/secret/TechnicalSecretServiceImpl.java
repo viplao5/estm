@@ -19,6 +19,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.starter.annotation.LogRecord;
+import com.mzt.logapi.service.impl.DiffParseFunction;
+import static cn.iocoder.yudao.module.bus.enums.LogRecordConstants.*;
+
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.bus.enums.ErrorCodeConstants.TECHNICAL_SECRET_NOT_EXISTS;
 
@@ -36,6 +41,8 @@ public class TechnicalSecretServiceImpl implements TechnicalSecretService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_SECRET_TYPE, subType = BUS_SECRET_CREATE_SUB_TYPE, bizNo = "{{#secret.id}}",
+            success = BUS_SECRET_CREATE_SUCCESS)
     public Long createSecret(TechnicalSecretSaveReqVO createReqVO) {
         TechnicalSecretDO secret = BeanUtils.toBean(createReqVO, TechnicalSecretDO.class);
         secretMapper.insert(secret);
@@ -45,14 +52,24 @@ public class TechnicalSecretServiceImpl implements TechnicalSecretService {
         // 保存关联项目
         saveSecretProjects(secret.getId(), createReqVO.getProjectIds());
         
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("secret", secret);
         return secret.getId();
     }
 
 
+
+
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_SECRET_TYPE, subType = BUS_SECRET_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = BUS_SECRET_UPDATE_SUCCESS)
     public void updateSecret(TechnicalSecretSaveReqVO updateReqVO) {
-        validateSecretExists(updateReqVO.getId());
+        TechnicalSecretDO secret = validateSecretExists(updateReqVO.getId());
+        
+        // 记录操作日志上下文 - 旧对象
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(secret, TechnicalSecretSaveReqVO.class));
+        
         TechnicalSecretDO updateObj = BeanUtils.toBean(updateReqVO, TechnicalSecretDO.class);
         secretMapper.updateById(updateObj);
         
@@ -63,19 +80,27 @@ public class TechnicalSecretServiceImpl implements TechnicalSecretService {
         // 更新关联项目
         projectAchievementMapper.deleteByAchievementIdAndType(updateReqVO.getId(), "SECRET");
         saveSecretProjects(updateReqVO.getId(), updateReqVO.getProjectIds());
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("secret", secret);
     }
 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_SECRET_TYPE, subType = BUS_SECRET_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_SECRET_DELETE_SUCCESS)
     public void deleteSecret(Long id) {
-        validateSecretExists(id);
+        TechnicalSecretDO secret = validateSecretExists(id);
         secretMapper.deleteById(id);
         
         // 删除人员关联
         achievementStaffMapper.deleteByAchievementIdAndType(id, "SECRET");
         // 删除关联项目
         projectAchievementMapper.deleteByAchievementIdAndType(id, "SECRET");
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("secret", secret);
     }
 
     @Override
@@ -89,15 +114,23 @@ public class TechnicalSecretServiceImpl implements TechnicalSecretService {
     }
 
 
-    private void validateSecretExists(Long id) {
-        if (secretMapper.selectById(id) == null) {
+    private TechnicalSecretDO validateSecretExists(Long id) {
+        TechnicalSecretDO secret = secretMapper.selectById(id);
+        if (secret == null) {
             throw exception(TECHNICAL_SECRET_NOT_EXISTS);
         }
+        return secret;
     }
 
     @Override
+    @LogRecord(type = BUS_SECRET_TYPE, subType = BUS_SECRET_VIEW_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_SECRET_VIEW_SUCCESS)
     public TechnicalSecretDO getSecret(Long id) {
-        return secretMapper.selectById(id);
+        TechnicalSecretDO secret = secretMapper.selectById(id);
+        if (secret != null) {
+            LogRecordContext.putVariable("secret", secret);
+        }
+        return secret;
     }
 
     @Override

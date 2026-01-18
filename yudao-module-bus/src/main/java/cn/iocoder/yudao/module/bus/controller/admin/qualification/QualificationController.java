@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.bus.controller.admin.qualification;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
+import cn.iocoder.yudao.framework.encrypt.core.annotation.ApiEncrypt;
 import cn.iocoder.yudao.module.bus.controller.admin.qualification.vo.*;
 import cn.iocoder.yudao.module.bus.dal.dataobject.qualification.QualificationDO;
 import cn.iocoder.yudao.module.bus.service.qualification.QualificationService;
@@ -67,6 +68,7 @@ public class QualificationController {
         return success(true);
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/get")
     @Operation(summary = "获得资质")
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
@@ -76,6 +78,7 @@ public class QualificationController {
         return success(BeanUtils.toBean(qualification, QualificationRespVO.class));
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/page")
     @Operation(summary = "获得资质分页")
     @PreAuthorize("@ss.hasPermission('bus:qualification:query')")
@@ -84,6 +87,7 @@ public class QualificationController {
         return success(BeanUtils.toBean(pageResult, QualificationRespVO.class));
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/simple-list")
     @Operation(summary = "获取资质精简列表", description = "用于下拉选择")
     public CommonResult<List<QualificationSimpleRespVO>> getQualificationSimpleList() {

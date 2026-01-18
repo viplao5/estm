@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.bus.controller.admin.platform;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
+import cn.iocoder.yudao.framework.encrypt.core.annotation.ApiEncrypt;
 import cn.iocoder.yudao.module.bus.controller.admin.platform.vo.*;
 import cn.iocoder.yudao.module.bus.dal.dataobject.platform.ResearchPlatformDO;
 import cn.iocoder.yudao.module.bus.service.platform.ResearchPlatformService;
@@ -61,6 +62,7 @@ public class ResearchPlatformController {
         return success(true);
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/get")
     @Operation(summary = "获得科研平台")
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
@@ -74,6 +76,7 @@ public class ResearchPlatformController {
         return success(respVO);
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/page")
     @Operation(summary = "获得科研平台分页")
     @PreAuthorize("@ss.hasPermission('bus:research-platform:query')")
@@ -82,6 +85,7 @@ public class ResearchPlatformController {
         return success(BeanUtils.toBean(pageResult, ResearchPlatformRespVO.class));
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/simple-list")
     @Operation(summary = "获取科研平台精简列表", description = "用于下拉选择")
     public CommonResult<List<ResearchPlatformSimpleRespVO>> getPlatformSimpleList() {

@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.bus.controller.admin.standard;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
+import cn.iocoder.yudao.framework.encrypt.core.annotation.ApiEncrypt;
 import cn.iocoder.yudao.module.bus.controller.admin.standard.vo.*;
 import cn.iocoder.yudao.module.bus.dal.dataobject.standard.StandardDO;
 import cn.iocoder.yudao.module.bus.service.standard.StandardService;
@@ -25,6 +26,7 @@ public class StandardController {
 
     @Resource
     private StandardService standardService;
+
 
     @PostMapping("/create")
     @Operation(summary = "创建标准")
@@ -59,6 +61,7 @@ public class StandardController {
         return success(true);
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/get")
     @Operation(summary = "获得标准")
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
@@ -74,6 +77,7 @@ public class StandardController {
     }
 
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/page")
     @Operation(summary = "获得标准分页")
     @PreAuthorize("@ss.hasPermission('bus:standard:query')")
@@ -82,6 +86,7 @@ public class StandardController {
         return success(BeanUtils.toBean(pageResult, StandardRespVO.class));
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/simple-list")
     @Operation(summary = "获取标准精简列表", description = "用于下拉选择")
     public CommonResult<List<StandardSimpleRespVO>> getStandardSimpleList() {

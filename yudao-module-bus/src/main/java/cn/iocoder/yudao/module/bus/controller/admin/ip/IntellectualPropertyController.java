@@ -3,6 +3,7 @@ package cn.iocoder.yudao.module.bus.controller.admin.ip;
 import cn.iocoder.yudao.framework.common.pojo.CommonResult;
 import cn.iocoder.yudao.framework.common.pojo.PageResult;
 import cn.iocoder.yudao.framework.common.util.object.BeanUtils;
+import cn.iocoder.yudao.framework.encrypt.core.annotation.ApiEncrypt;
 import cn.iocoder.yudao.module.bus.controller.admin.ip.vo.*;
 import cn.iocoder.yudao.module.bus.dal.dataobject.ip.IntellectualPropertyDO;
 import cn.iocoder.yudao.module.bus.service.ip.IntellectualPropertyService;
@@ -61,6 +62,7 @@ public class IntellectualPropertyController {
         return success(true);
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/get")
     @Operation(summary = "获得知识产权")
     @Parameter(name = "id", description = "编号", required = true, example = "1024")
@@ -76,6 +78,7 @@ public class IntellectualPropertyController {
     }
 
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/page")
     @Operation(summary = "获得知识产权分页")
     @PreAuthorize("@ss.hasPermission('bus:intellectual-property:query')")
@@ -84,6 +87,7 @@ public class IntellectualPropertyController {
         return success(BeanUtils.toBean(pageResult, IntellectualPropertyRespVO.class));
     }
 
+    @ApiEncrypt(request = true, response = true)
     @GetMapping("/simple-list")
     @Operation(summary = "获取知识产权精简列表", description = "用于下拉选择")
     public CommonResult<List<IntellectualPropertySimpleRespVO>> getIPSimpleList() {

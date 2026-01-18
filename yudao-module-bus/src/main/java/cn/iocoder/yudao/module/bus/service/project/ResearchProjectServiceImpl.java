@@ -13,12 +13,17 @@ import cn.iocoder.yudao.module.bus.dal.mysql.relation.ProjectPlatformMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import com.mzt.logapi.service.impl.DiffParseFunction;
 
 import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.starter.annotation.LogRecord;
+import static cn.iocoder.yudao.module.bus.enums.LogRecordConstants.*;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.bus.enums.ErrorCodeConstants.RESEARCH_PROJECT_NOT_EXISTS;
@@ -40,6 +45,8 @@ public class ResearchProjectServiceImpl implements ResearchProjectService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_PROJECT_TYPE, subType = BUS_PROJECT_CREATE_SUB_TYPE, bizNo = "{{#project.id}}",
+            success = BUS_PROJECT_CREATE_SUCCESS)
     public Long createProject(ResearchProjectSaveReqVO createReqVO) {
         ResearchProjectDO project = BeanUtils.toBean(createReqVO, ResearchProjectDO.class);
         projectMapper.insert(project);
@@ -47,14 +54,24 @@ public class ResearchProjectServiceImpl implements ResearchProjectService {
         // 保存关联关系
         saveProjectRelations(project.getId(), createReqVO.getPlatformIds(), createReqVO.getMemberIds());
         
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("project", project);
         return project.getId();
     }
 
 
+
+
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_PROJECT_TYPE, subType = BUS_PROJECT_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = BUS_PROJECT_UPDATE_SUCCESS)
     public void updateProject(ResearchProjectSaveReqVO updateReqVO) {
-        validateProjectExists(updateReqVO.getId());
+        ResearchProjectDO project = validateProjectExists(updateReqVO.getId());
+        
+        // 记录操作日志上下文 - 旧对象
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(project, ResearchProjectSaveReqVO.class));
+        
         ResearchProjectDO updateObj = BeanUtils.toBean(updateReqVO, ResearchProjectDO.class);
         projectMapper.updateById(updateObj);
         
@@ -62,18 +79,26 @@ public class ResearchProjectServiceImpl implements ResearchProjectService {
         projectPlatformMapper.deleteByProjectId(updateReqVO.getId());
         achievementStaffMapper.deleteByAchievementIdAndType(updateReqVO.getId(), "PROJECT");
         saveProjectRelations(updateReqVO.getId(), updateReqVO.getPlatformIds(), updateReqVO.getMemberIds());
+
+        // 记录操作日志上下文 - 新对象（实际上 diff 是跟 updateReqVO 比，这里 context 放 project 主要是为了 success 模版里的 {{#project.name}}）
+        LogRecordContext.putVariable("project", project);
     }
 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_PROJECT_TYPE, subType = BUS_PROJECT_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_PROJECT_DELETE_SUCCESS)
     public void deleteProject(Long id) {
-        validateProjectExists(id);
+        ResearchProjectDO project = validateProjectExists(id);
         projectMapper.deleteById(id);
         
         // 删除关联关系
         projectPlatformMapper.deleteByProjectId(id);
         achievementStaffMapper.deleteByAchievementIdAndType(id, "PROJECT");
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("project", project);
     }
 
     @Override
@@ -87,15 +112,23 @@ public class ResearchProjectServiceImpl implements ResearchProjectService {
     }
 
 
-    private void validateProjectExists(Long id) {
-        if (projectMapper.selectById(id) == null) {
+    private ResearchProjectDO validateProjectExists(Long id) {
+        ResearchProjectDO project = projectMapper.selectById(id);
+        if (project == null) {
             throw exception(RESEARCH_PROJECT_NOT_EXISTS);
         }
+        return project;
     }
 
     @Override
+    @LogRecord(type = BUS_PROJECT_TYPE, subType = BUS_PROJECT_VIEW_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_PROJECT_VIEW_SUCCESS)
     public ResearchProjectDO getProject(Long id) {
-        return projectMapper.selectById(id);
+        ResearchProjectDO project = projectMapper.selectById(id);
+        if (project != null) {
+            LogRecordContext.putVariable("project", project);
+        }
+        return project;
     }
 
     @Override

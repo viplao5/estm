@@ -13,12 +13,17 @@ import cn.iocoder.yudao.module.bus.dal.mysql.relation.ProjectAchievementMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import com.mzt.logapi.service.impl.DiffParseFunction;
 
 import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
+import com.mzt.logapi.context.LogRecordContext;
+import com.mzt.logapi.starter.annotation.LogRecord;
+import static cn.iocoder.yudao.module.bus.enums.LogRecordConstants.*;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.bus.enums.ErrorCodeConstants.INTELLECTUAL_PROPERTY_NOT_EXISTS;
@@ -40,6 +45,8 @@ public class IntellectualPropertyServiceImpl implements IntellectualPropertyServ
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_IP_TYPE, subType = BUS_IP_CREATE_SUB_TYPE, bizNo = "{{#ip.id}}",
+            success = BUS_IP_CREATE_SUCCESS)
     public Long createIP(IntellectualPropertySaveReqVO createReqVO) {
         IntellectualPropertyDO ip = BeanUtils.toBean(createReqVO, IntellectualPropertyDO.class);
         ipMapper.insert(ip);
@@ -49,14 +56,24 @@ public class IntellectualPropertyServiceImpl implements IntellectualPropertyServ
         // 保存关联项目
         saveIPProjects(ip.getId(), createReqVO.getProjectIds());
         
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("ip", ip);
         return ip.getId();
     }
 
 
+
+
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_IP_TYPE, subType = BUS_IP_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
+            success = BUS_IP_UPDATE_SUCCESS)
     public void updateIP(IntellectualPropertySaveReqVO updateReqVO) {
-        validateIPExists(updateReqVO.getId());
+        IntellectualPropertyDO ip = validateIPExists(updateReqVO.getId());
+        
+        // 记录操作日志上下文 - 旧对象
+        LogRecordContext.putVariable(DiffParseFunction.OLD_OBJECT, BeanUtils.toBean(ip, IntellectualPropertySaveReqVO.class));
+        
         IntellectualPropertyDO updateObj = BeanUtils.toBean(updateReqVO, IntellectualPropertyDO.class);
         ipMapper.updateById(updateObj);
         
@@ -67,19 +84,27 @@ public class IntellectualPropertyServiceImpl implements IntellectualPropertyServ
         // 更新关联项目
         projectAchievementMapper.deleteByAchievementIdAndType(updateReqVO.getId(), "IP");
         saveIPProjects(updateReqVO.getId(), updateReqVO.getProjectIds());
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("ip", ip);
     }
 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @LogRecord(type = BUS_IP_TYPE, subType = BUS_IP_DELETE_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_IP_DELETE_SUCCESS)
     public void deleteIP(Long id) {
-        validateIPExists(id);
+        IntellectualPropertyDO ip = validateIPExists(id);
         ipMapper.deleteById(id);
         
         // 删除发明人关联
         achievementStaffMapper.deleteByAchievementIdAndType(id, "IP");
         // 删除关联项目
         projectAchievementMapper.deleteByAchievementIdAndType(id, "IP");
+
+        // 记录操作日志上下文
+        LogRecordContext.putVariable("ip", ip);
     }
 
     @Override
@@ -93,15 +118,23 @@ public class IntellectualPropertyServiceImpl implements IntellectualPropertyServ
     }
 
 
-    private void validateIPExists(Long id) {
-        if (ipMapper.selectById(id) == null) {
+    private IntellectualPropertyDO validateIPExists(Long id) {
+        IntellectualPropertyDO ip = ipMapper.selectById(id);
+        if (ip == null) {
             throw exception(INTELLECTUAL_PROPERTY_NOT_EXISTS);
         }
+        return ip;
     }
 
     @Override
+    @LogRecord(type = BUS_IP_TYPE, subType = BUS_IP_VIEW_SUB_TYPE, bizNo = "{{#id}}",
+            success = BUS_IP_VIEW_SUCCESS)
     public IntellectualPropertyDO getIP(Long id) {
-        return ipMapper.selectById(id);
+        IntellectualPropertyDO ip = ipMapper.selectById(id);
+        if (ip != null) {
+            LogRecordContext.putVariable("ip", ip);
+        }
+        return ip;
     }
 
     @Override
