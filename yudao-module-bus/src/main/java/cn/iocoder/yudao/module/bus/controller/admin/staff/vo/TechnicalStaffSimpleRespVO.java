@@ -16,4 +16,10 @@ public class TechnicalStaffSimpleRespVO {
     @Schema(description = "岗位", example = "高级工程师")
     private String post;
 
+    @Schema(description = "学历", example = "bachelor")
+    private String eduDegree;
+
+    @Schema(description = "职称", example = "associate")
+    private String title;
+
 }

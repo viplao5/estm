@@ -28,8 +28,9 @@
       <el-table-column label="技术领域" prop="techField" min-width="120" />
       <el-table-column label="完成日期" prop="finishDate" width="120" :formatter="dateFormatter2" />
       <el-table-column label="创建时间" prop="createTime" width="180" :formatter="dateFormatter" />
-      <el-table-column label="操作" align="center" width="150" fixed="right">
+      <el-table-column label="操作" align="center" width="200" fixed="right">
         <template #default="scope">
+          <el-button link type="primary" @click="openDetail(scope.row.id)" v-hasPermi="['bus:technical-secret:query']">查看</el-button>
           <el-button link type="primary" @click="openForm('update', scope.row.id)" v-hasPermi="['bus:technical-secret:update']">修改</el-button>
           <el-button link type="danger" @click="handleDelete(scope.row.id)" v-hasPermi="['bus:technical-secret:delete']">删除</el-button>
         </template>
@@ -38,12 +39,15 @@
     <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" @pagination="getList" />
   </ContentWrap>
   <SecretForm ref="formRef" @success="getList" />
+  <SecretDetail ref="detailRef" />
 </template>
 <script lang="ts" setup>
 import { DICT_TYPE } from '@/utils/dict'
 import { dateFormatter, dateFormatter2 } from '@/utils/formatTime'
 import * as SecretApi from '@/api/bus/secret'
 import SecretForm from './SecretForm.vue'
+import SecretDetail from './SecretDetail.vue'
+
 defineOptions({ name: 'BusTechnicalSecret' })
 const message = useMessage()
 const { t } = useI18n()
@@ -57,6 +61,8 @@ const handleQuery = () => { queryParams.pageNo = 1; getList() }
 const resetQuery = () => { queryFormRef.value?.resetFields(); handleQuery() }
 const formRef = ref()
 const openForm = (type: string, id?: number) => { formRef.value.open(type, id) }
+const detailRef = ref()
+const openDetail = (id: number) => { detailRef.value.open(id) }
 const handleDelete = async (id: number) => { try { await message.delConfirm(); await SecretApi.deleteSecret(id); message.success(t('common.delSuccess')); await getList() } catch {} }
 const checkedIds = ref<number[]>([])
 const handleRowCheckboxChange = (rows: SecretApi.TechnicalSecretVO[]) => { checkedIds.value = rows.map((row) => row.id!) }

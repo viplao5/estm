@@ -30,8 +30,9 @@
       <el-table-column label="申请日期" prop="appDate" width="120" :formatter="dateFormatter2" />
       <el-table-column label="授权日期" prop="grantDate" width="120" :formatter="dateFormatter2" />
       <el-table-column label="创建时间" prop="createTime" width="180" :formatter="dateFormatter" />
-      <el-table-column label="操作" align="center" width="150" fixed="right">
+      <el-table-column label="操作" align="center" width="200" fixed="right">
         <template #default="scope">
+          <el-button link type="primary" @click="openDetail(scope.row.id)" v-hasPermi="['bus:intellectual-property:query']">查看</el-button>
           <el-button link type="primary" @click="openForm('update', scope.row.id)" v-hasPermi="['bus:intellectual-property:update']">修改</el-button>
           <el-button link type="danger" @click="handleDelete(scope.row.id)" v-hasPermi="['bus:intellectual-property:delete']">删除</el-button>
         </template>
@@ -40,12 +41,15 @@
     <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" @pagination="getList" />
   </ContentWrap>
   <IPForm ref="formRef" @success="getList" />
+  <IPDetail ref="detailRef" />
 </template>
 <script lang="ts" setup>
 import { DICT_TYPE } from '@/utils/dict'
 import { dateFormatter, dateFormatter2 } from '@/utils/formatTime'
 import * as IPApi from '@/api/bus/ip'
 import IPForm from './IPForm.vue'
+import IPDetail from './IPDetail.vue'
+
 defineOptions({ name: 'BusIntellectualProperty' })
 const message = useMessage()
 const { t } = useI18n()
@@ -59,6 +63,8 @@ const handleQuery = () => { queryParams.pageNo = 1; getList() }
 const resetQuery = () => { queryFormRef.value?.resetFields(); handleQuery() }
 const formRef = ref()
 const openForm = (type: string, id?: number) => { formRef.value.open(type, id) }
+const detailRef = ref()
+const openDetail = (id: number) => { detailRef.value.open(id) }
 const handleDelete = async (id: number) => { try { await message.delConfirm(); await IPApi.deleteIP(id); message.success(t('common.delSuccess')); await getList() } catch {} }
 const checkedIds = ref<number[]>([])
 const handleRowCheckboxChange = (rows: IPApi.IntellectualPropertyVO[]) => { checkedIds.value = rows.map((row) => row.id!) }

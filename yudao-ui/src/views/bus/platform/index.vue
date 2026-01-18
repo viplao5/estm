@@ -33,8 +33,9 @@
       <el-table-column label="有效期开始" prop="startDate" width="120" :formatter="dateFormatter2" />
       <el-table-column label="有效期结束" prop="endDate" width="120" :formatter="dateFormatter2" />
       <el-table-column label="创建时间" prop="createTime" width="180" :formatter="dateFormatter" />
-      <el-table-column label="操作" align="center" width="150" fixed="right">
+      <el-table-column label="操作" align="center" width="200" fixed="right">
         <template #default="scope">
+          <el-button link type="primary" @click="openDetail(scope.row.id)" v-hasPermi="['bus:research-platform:query']">查看</el-button>
           <el-button link type="primary" @click="openForm('update', scope.row.id)" v-hasPermi="['bus:research-platform:update']">修改</el-button>
           <el-button link type="danger" @click="handleDelete(scope.row.id)" v-hasPermi="['bus:research-platform:delete']">删除</el-button>
         </template>
@@ -43,12 +44,14 @@
     <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" @pagination="getList" />
   </ContentWrap>
   <PlatformForm ref="formRef" @success="getList" />
+  <PlatformDetail ref="detailRef" />
 </template>
 <script lang="ts" setup>
 import { DICT_TYPE } from '@/utils/dict'
 import { dateFormatter, dateFormatter2 } from '@/utils/formatTime'
 import * as PlatformApi from '@/api/bus/platform'
 import PlatformForm from './PlatformForm.vue'
+import PlatformDetail from './PlatformDetail.vue'
 
 defineOptions({ name: 'BusResearchPlatform' })
 
@@ -76,6 +79,8 @@ const resetQuery = () => { queryFormRef.value?.resetFields(); handleQuery() }
 
 const formRef = ref()
 const openForm = (type: string, id?: number) => { formRef.value.open(type, id) }
+const detailRef = ref()
+const openDetail = (id: number) => { detailRef.value.open(id) }
 
 const handleDelete = async (id: number) => {
   try { await message.delConfirm(); await PlatformApi.deletePlatform(id); message.success(t('common.delSuccess')); await getList() } catch {}

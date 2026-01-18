@@ -65,6 +65,7 @@
             <el-date-picker
               v-model="formData.entryDate"
               type="date"
+              value-format="x"
               placeholder="选择入职日期"
               style="width: 100%"
             />

@@ -20,8 +20,9 @@
       <el-table-column label="生效日期" prop="startDate" width="120" :formatter="dateFormatter2" />
       <el-table-column label="到期日期" prop="endDate" width="120" :formatter="dateFormatter2" />
       <el-table-column label="创建时间" prop="createTime" width="180" :formatter="dateFormatter" />
-      <el-table-column label="操作" align="center" width="150" fixed="right">
+      <el-table-column label="操作" align="center" width="200" fixed="right">
         <template #default="scope">
+          <el-button link type="primary" @click="openDetail(scope.row.id)" v-hasPermi="['bus:qualification:query']">查看</el-button>
           <el-button link type="primary" @click="openForm('update', scope.row.id)" v-hasPermi="['bus:qualification:update']">修改</el-button>
           <el-button link type="danger" @click="handleDelete(scope.row.id)" v-hasPermi="['bus:qualification:delete']">删除</el-button>
         </template>
@@ -30,11 +31,14 @@
     <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" @pagination="getList" />
   </ContentWrap>
   <QualificationForm ref="formRef" @success="getList" />
+  <QualificationDetail ref="detailRef" />
 </template>
 <script lang="ts" setup>
 import { dateFormatter, dateFormatter2 } from '@/utils/formatTime'
 import * as QualificationApi from '@/api/bus/qualification'
 import QualificationForm from './QualificationForm.vue'
+import QualificationDetail from './QualificationDetail.vue'
+
 defineOptions({ name: 'BusQualification' })
 const message = useMessage()
 const { t } = useI18n()
@@ -48,6 +52,8 @@ const handleQuery = () => { queryParams.pageNo = 1; getList() }
 const resetQuery = () => { queryFormRef.value?.resetFields(); handleQuery() }
 const formRef = ref()
 const openForm = (type: string, id?: number) => { formRef.value.open(type, id) }
+const detailRef = ref()
+const openDetail = (id: number) => { detailRef.value.open(id) }
 const handleDelete = async (id: number) => { try { await message.delConfirm(); await QualificationApi.deleteQualification(id); message.success(t('common.delSuccess')); await getList() } catch {} }
 const checkedIds = ref<number[]>([])
 const handleRowCheckboxChange = (rows: QualificationApi.QualificationVO[]) => { checkedIds.value = rows.map((row) => row.id!) }

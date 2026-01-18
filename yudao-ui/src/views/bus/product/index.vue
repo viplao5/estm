@@ -34,8 +34,9 @@
       <el-table-column label="销售毛利(万)" prop="profit" min-width="120" />
       <el-table-column label="上市日期" prop="launchDate" width="120" :formatter="dateFormatter2" />
       <el-table-column label="创建时间" prop="createTime" width="180" :formatter="dateFormatter" />
-      <el-table-column label="操作" align="center" width="150" fixed="right">
+      <el-table-column label="操作" align="center" width="200" fixed="right">
         <template #default="scope">
+          <el-button link type="primary" @click="openDetail(scope.row.id)" v-hasPermi="['bus:product-service:query']">查看</el-button>
           <el-button link type="primary" @click="openForm('update', scope.row.id)" v-hasPermi="['bus:product-service:update']">修改</el-button>
           <el-button link type="danger" @click="handleDelete(scope.row.id)" v-hasPermi="['bus:product-service:delete']">删除</el-button>
         </template>
@@ -44,12 +45,15 @@
     <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" @pagination="getList" />
   </ContentWrap>
   <ProductForm ref="formRef" @success="getList" />
+  <ProductDetail ref="detailRef" />
 </template>
 <script lang="ts" setup>
 import { DICT_TYPE, getStrDictOptions } from '@/utils/dict'
 import { dateFormatter, dateFormatter2 } from '@/utils/formatTime'
 import * as ProductApi from '@/api/bus/product'
 import ProductForm from './ProductForm.vue'
+import ProductDetail from './ProductDetail.vue'
+
 defineOptions({ name: 'BusProductService' })
 const message = useMessage()
 const { t } = useI18n()
@@ -63,6 +67,8 @@ const handleQuery = () => { queryParams.pageNo = 1; getList() }
 const resetQuery = () => { queryFormRef.value?.resetFields(); handleQuery() }
 const formRef = ref()
 const openForm = (type: string, id?: number) => { formRef.value.open(type, id) }
+const detailRef = ref()
+const openDetail = (id: number) => { detailRef.value.open(id) }
 const handleDelete = async (id: number) => { try { await message.delConfirm(); await ProductApi.deleteProduct(id); message.success(t('common.delSuccess')); await getList() } catch {} }
 const checkedIds = ref<number[]>([])
 const handleRowCheckboxChange = (rows: ProductApi.ProductServiceVO[]) => { checkedIds.value = rows.map((row) => row.id!) }

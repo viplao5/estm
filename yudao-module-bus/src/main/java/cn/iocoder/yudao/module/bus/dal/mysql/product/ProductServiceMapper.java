@@ -15,6 +15,7 @@ public interface ProductServiceMapper extends BaseMapperX<ProductServiceDO> {
                 .eqIfPresent(ProductServiceDO::getCategory, reqVO.getCategory())
                 .eqIfPresent(ProductServiceDO::getStatus, reqVO.getStatus())
                 .likeIfPresent(ProductServiceDO::getLeader, reqVO.getLeader())
+                .inIfPresent(ProductServiceDO::getId, reqVO.getIds())
                 .orderByDesc(ProductServiceDO::getId));
     }
 }

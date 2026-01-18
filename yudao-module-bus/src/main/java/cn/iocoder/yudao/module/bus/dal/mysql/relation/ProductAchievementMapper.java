@@ -31,4 +31,10 @@ public interface ProductAchievementMapper extends BaseMapperX<ProductAchievement
                 .eq(ProductAchievementDO::getAchievementType, type));
     }
 
+    default List<ProductAchievementDO> selectListByAchievementIdAndType(Long achievementId, String type) {
+        return selectList(new LambdaQueryWrapperX<ProductAchievementDO>()
+                .eq(ProductAchievementDO::getAchievementId, achievementId)
+                .eq(ProductAchievementDO::getAchievementType, type));
+    }
+
 }

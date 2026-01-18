@@ -24,4 +24,7 @@ public class TechnicalSecretPageReqVO extends PageParam {
     @Schema(description = "关联研发项目ID", example = "1")
     private Long projectId;
 
+    @Schema(description = "ID列表")
+    private java.util.Collection<Long> ids;
+
 }

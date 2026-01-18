@@ -39,4 +39,7 @@ public class IntellectualPropertyPageReqVO extends PageParam {
     @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
     private LocalDateTime[] appDate;
 
+    @Schema(description = "ID列表")
+    private java.util.Collection<Long> ids;
+
 }

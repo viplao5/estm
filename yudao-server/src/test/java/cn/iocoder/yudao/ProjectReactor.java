@@ -28,13 +28,13 @@ public class ProjectReactor {
     private static final String GROUP_ID = "cn.iocoder.boot";
     private static final String ARTIFACT_ID = "yudao";
     private static final String PACKAGE_NAME = "cn.iocoder.yudao";
-    private static final String TITLE = "芋道管理系统";
+    private static final String TITLE = "企业科技成果管理工作台";
 
     /**
      * 白名单文件，不进行重写，避免出问题
      */
     private static final Set<String> WHITE_FILE_TYPES = SetUtils.asSet("gif", "jpg", "svg", "png", // 图片
-            "eot", "woff2", "ttf", "woff",  // 字体
+            "eot", "woff2", "ttf", "woff", // 字体
             "xdb"); // IP 库
 
     public static void main(String[] args) {
@@ -103,8 +103,8 @@ public class ProjectReactor {
     }
 
     private static String replaceFileContent(File file, String groupIdNew,
-                                             String artifactIdNew, String packageNameNew,
-                                             String titleNew) {
+            String artifactIdNew, String packageNameNew,
+            String titleNew) {
         String content = FileUtil.readString(file, StandardCharsets.UTF_8);
         // 如果是白名单的文件类型，不进行重写
         String fileType = getFileType(file);
@@ -120,19 +120,19 @@ public class ProjectReactor {
     }
 
     private static void writeFile(File file, String fileContent, String projectBaseDir,
-                                  String projectBaseDirNew, String packageNameNew, String artifactIdNew) {
+            String projectBaseDirNew, String packageNameNew, String artifactIdNew) {
         String newPath = buildNewFilePath(file, projectBaseDir, projectBaseDirNew, packageNameNew, artifactIdNew);
         FileUtil.writeUtf8String(fileContent, newPath);
     }
 
     private static void copyFile(File file, String projectBaseDir,
-                                 String projectBaseDirNew, String packageNameNew, String artifactIdNew) {
+            String projectBaseDirNew, String packageNameNew, String artifactIdNew) {
         String newPath = buildNewFilePath(file, projectBaseDir, projectBaseDirNew, packageNameNew, artifactIdNew);
         FileUtil.copyFile(file, new File(newPath));
     }
 
     private static String buildNewFilePath(File file, String projectBaseDir,
-                                           String projectBaseDirNew, String packageNameNew, String artifactIdNew) {
+            String projectBaseDirNew, String packageNameNew, String artifactIdNew) {
         return file.getPath().replace(projectBaseDir, projectBaseDirNew) // 新目录
                 .replace(PACKAGE_NAME.replaceAll("\\.", Matcher.quoteReplacement(separator)),
                         packageNameNew.replaceAll("\\.", Matcher.quoteReplacement(separator)))

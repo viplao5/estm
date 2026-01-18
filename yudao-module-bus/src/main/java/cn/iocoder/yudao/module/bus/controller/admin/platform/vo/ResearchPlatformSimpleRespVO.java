@@ -16,4 +16,7 @@ public class ResearchPlatformSimpleRespVO {
     @Schema(description = "平台级别", example = "national")
     private String level;
 
+    @Schema(description = "认定单位", example = "科技部")
+    private String certUnit;
+
 }

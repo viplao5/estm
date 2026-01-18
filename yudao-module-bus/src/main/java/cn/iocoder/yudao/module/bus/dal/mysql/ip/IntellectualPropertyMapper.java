@@ -22,6 +22,7 @@ public interface IntellectualPropertyMapper extends BaseMapperX<IntellectualProp
                 .eqIfPresent(IntellectualPropertyDO::getSource, reqVO.getSource())
                 .inSqlIfPresent(IntellectualPropertyDO::getId, reqVO.getProjectId() != null ?
                         "SELECT achievement_id FROM bus_project_achievement WHERE achievement_type = 'IP' AND project_id = " + reqVO.getProjectId() : null)
+                .inIfPresent(IntellectualPropertyDO::getId, reqVO.getIds())
                 .betweenIfPresent(IntellectualPropertyDO::getAppDate, reqVO.getAppDate())
                 .orderByDesc(IntellectualPropertyDO::getId));
     }

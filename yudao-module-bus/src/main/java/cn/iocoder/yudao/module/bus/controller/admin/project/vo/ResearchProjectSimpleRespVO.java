@@ -16,4 +16,7 @@ public class ResearchProjectSimpleRespVO {
     @Schema(description = "项目状态", example = "in_progress")
     private String status;
 
+    @Schema(description = "项目类别", example = "1")
+    private String category;
+
 }

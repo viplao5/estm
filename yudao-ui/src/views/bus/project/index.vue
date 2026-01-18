@@ -33,8 +33,9 @@
       <el-table-column label="开始日期" prop="startDate" width="120" :formatter="dateFormatter2" />
       <el-table-column label="结束日期" prop="endDate" width="120" :formatter="dateFormatter2" />
       <el-table-column label="创建时间" prop="createTime" width="180" :formatter="dateFormatter" />
-      <el-table-column label="操作" align="center" width="150" fixed="right">
+      <el-table-column label="操作" align="center" width="200" fixed="right">
         <template #default="scope">
+          <el-button link type="primary" @click="openDetail(scope.row.id)" v-hasPermi="['bus:research-project:query']">查看</el-button>
           <el-button link type="primary" @click="openForm('update', scope.row.id)" v-hasPermi="['bus:research-project:update']">修改</el-button>
           <el-button link type="danger" @click="handleDelete(scope.row.id)" v-hasPermi="['bus:research-project:delete']">删除</el-button>
         </template>
@@ -43,12 +44,14 @@
     <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" @pagination="getList" />
   </ContentWrap>
   <ProjectForm ref="formRef" @success="getList" />
+  <ProjectDetail ref="detailRef" />
 </template>
 <script lang="ts" setup>
 import { DICT_TYPE } from '@/utils/dict'
 import { dateFormatter, dateFormatter2 } from '@/utils/formatTime'
 import * as ProjectApi from '@/api/bus/project'
 import ProjectForm from './ProjectForm.vue'
+import ProjectDetail from './ProjectDetail.vue'
 
 defineOptions({ name: 'BusResearchProject' })
 
@@ -68,6 +71,8 @@ const handleQuery = () => { queryParams.pageNo = 1; getList() }
 const resetQuery = () => { queryFormRef.value?.resetFields(); handleQuery() }
 const formRef = ref()
 const openForm = (type: string, id?: number) => { formRef.value.open(type, id) }
+const detailRef = ref()
+const openDetail = (id: number) => { detailRef.value.open(id) }
 const handleDelete = async (id: number) => { try { await message.delConfirm(); await ProjectApi.deleteProject(id); message.success(t('common.delSuccess')); await getList() } catch {} }
 const checkedIds = ref<number[]>([])
 const handleRowCheckboxChange = (rows: ProjectApi.ResearchProjectVO[]) => { checkedIds.value = rows.map((row) => row.id!) }

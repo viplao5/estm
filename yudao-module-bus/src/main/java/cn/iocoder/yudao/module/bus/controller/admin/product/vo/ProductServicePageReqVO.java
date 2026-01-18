@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+import java.util.Collection;
+
 @Schema(description = "管理后台 - 产品与服务分页 Request VO")
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -19,4 +21,13 @@ public class ProductServicePageReqVO extends PageParam {
     private String status;
     @Schema(description = "产品负责人")
     private String leader;
+
+    @Schema(description = "关联IP ID")
+    private Long ipId;
+
+    @Schema(description = "关联技术秘密 ID")
+    private Long secretId;
+
+    @Schema(description = "ID列表")
+    private Collection<Long> ids;
 }

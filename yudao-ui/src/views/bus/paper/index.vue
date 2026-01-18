@@ -28,8 +28,9 @@
       <el-table-column label="发表年份" prop="pubYear" min-width="100" />
       <el-table-column label="DOI" prop="doi" min-width="150" />
       <el-table-column label="创建时间" prop="createTime" width="180" :formatter="dateFormatter" />
-      <el-table-column label="操作" align="center" width="150" fixed="right">
+      <el-table-column label="操作" align="center" width="200" fixed="right">
         <template #default="scope">
+          <el-button link type="primary" @click="openDetail(scope.row.id)" v-hasPermi="['bus:paper-work:query']">查看</el-button>
           <el-button link type="primary" @click="openForm('update', scope.row.id)" v-hasPermi="['bus:paper-work:update']">修改</el-button>
           <el-button link type="danger" @click="handleDelete(scope.row.id)" v-hasPermi="['bus:paper-work:delete']">删除</el-button>
         </template>
@@ -38,12 +39,15 @@
     <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" @pagination="getList" />
   </ContentWrap>
   <PaperForm ref="formRef" @success="getList" />
+  <PaperDetail ref="detailRef" />
 </template>
 <script lang="ts" setup>
 import { DICT_TYPE, getStrDictOptions } from '@/utils/dict'
 import { dateFormatter } from '@/utils/formatTime'
 import * as PaperApi from '@/api/bus/paper'
 import PaperForm from './PaperForm.vue'
+import PaperDetail from './PaperDetail.vue'
+
 defineOptions({ name: 'BusPaperWork' })
 const message = useMessage()
 const { t } = useI18n()
@@ -57,6 +61,8 @@ const handleQuery = () => { queryParams.pageNo = 1; getList() }
 const resetQuery = () => { queryFormRef.value?.resetFields(); handleQuery() }
 const formRef = ref()
 const openForm = (type: string, id?: number) => { formRef.value.open(type, id) }
+const detailRef = ref()
+const openDetail = (id: number) => { detailRef.value.open(id) }
 const handleDelete = async (id: number) => { try { await message.delConfirm(); await PaperApi.deletePaper(id); message.success(t('common.delSuccess')); await getList() } catch {} }
 const checkedIds = ref<number[]>([])
 const handleRowCheckboxChange = (rows: PaperApi.PaperWorkVO[]) => { checkedIds.value = rows.map((row) => row.id!) }

@@ -64,8 +64,16 @@
       <el-table-column label="岗位" prop="post" min-width="120" />
       <el-table-column label="毕业院校" prop="school" min-width="150" />
       <el-table-column label="专业" prop="major" min-width="120" />
-      <el-table-column label="学历" prop="eduDegree" min-width="80" />
-      <el-table-column label="职称" prop="title" min-width="80" />
+      <el-table-column label="学历" prop="eduDegree" min-width="80">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.BUS_EDU_DEGREE" :value="scope.row.eduDegree" />
+        </template>
+      </el-table-column>
+      <el-table-column label="职称" prop="title" min-width="80">
+        <template #default="scope">
+          <dict-tag :type="DICT_TYPE.BUS_TITLE" :value="scope.row.title" />
+        </template>
+      </el-table-column>
       <el-table-column label="在职状态" prop="isActive" min-width="80">
         <template #default="scope">
           <el-tag :type="scope.row.isActive ? 'success' : 'danger'">
@@ -87,8 +95,16 @@
         width="180"
         :formatter="dateFormatter"
       />
-      <el-table-column label="操作" align="center" width="150" fixed="right">
+      <el-table-column label="操作" align="center" width="200" fixed="right">
         <template #default="scope">
+          <el-button
+            link
+            type="primary"
+            @click="openDetail(scope.row.id)"
+            v-hasPermi="['bus:technical-staff:query']"
+          >
+            查看
+          </el-button>
           <el-button
             link
             type="primary"
@@ -119,11 +135,14 @@
 
   <!-- 表单弹窗：添加/修改 -->
   <StaffForm ref="formRef" @success="getList" />
+  <StaffDetail ref="detailRef" />
 </template>
 <script lang="ts" setup>
 import { dateFormatter } from '@/utils/formatTime'
+import { DICT_TYPE } from '@/utils/dict'
 import * as StaffApi from '@/api/bus/staff'
 import StaffForm from './StaffForm.vue'
+import StaffDetail from './StaffDetail.vue'
 
 defineOptions({ name: 'BusTechnicalStaff' })
 
@@ -170,6 +189,11 @@ const resetQuery = () => {
 const formRef = ref()
 const openForm = (type: string, id?: number) => {
   formRef.value.open(type, id)
+}
+
+const detailRef = ref()
+const openDetail = (id: number) => {
+  detailRef.value.open(id)
 }
 
 /** 删除按钮操作 */

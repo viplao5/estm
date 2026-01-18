@@ -144,6 +144,32 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public PageResult<ProductServiceDO> getProductPage(ProductServicePageReqVO pageReqVO) {
+        // 如果有关联IP ID，先查询关联的产品ID
+        if (pageReqVO.getIpId() != null) {
+            List<ProductAchievementDO> relations = productAchievementMapper.selectListByAchievementIdAndType(pageReqVO.getIpId(), "IP");
+            if (cn.hutool.core.collection.CollUtil.isEmpty(relations)) {
+                return PageResult.empty();
+            }
+            pageReqVO.setIds(cn.hutool.core.collection.CollUtil.map(relations, ProductAchievementDO::getProductId, true));
+        }
+        // 如果有关联技术秘密 ID，先查询关联的产品ID
+        if (pageReqVO.getSecretId() != null) {
+            List<ProductAchievementDO> relations = productAchievementMapper.selectListByAchievementIdAndType(pageReqVO.getSecretId(), "SECRET");
+            if (cn.hutool.core.collection.CollUtil.isEmpty(relations)) {
+                return PageResult.empty();
+            }
+            // 如果已有ids（比如同时传了ipId），则取交集，或者根据业务需求处理。这里简单覆盖或合并？
+            // 通常不会同时传，这里做个简单处理：如果已有ID列表，则取交集
+            List<Long> secretProductIds = cn.hutool.core.collection.CollUtil.map(relations, ProductAchievementDO::getProductId, true);
+            if (pageReqVO.getIds() != null) {
+                pageReqVO.setIds(cn.hutool.core.collection.CollUtil.intersection(pageReqVO.getIds(), secretProductIds));
+                if (cn.hutool.core.collection.CollUtil.isEmpty(pageReqVO.getIds())) {
+                     return PageResult.empty();
+                }
+            } else {
+                pageReqVO.setIds(secretProductIds);
+            }
+        }
         return productMapper.selectPage(pageReqVO);
     }
 

@@ -32,8 +32,9 @@
       </el-table-column>
       <el-table-column label="获奖日期" prop="awardDate" width="120" :formatter="dateFormatter2" />
       <el-table-column label="创建时间" prop="createTime" width="180" :formatter="dateFormatter" />
-      <el-table-column label="操作" align="center" width="150" fixed="right">
+      <el-table-column label="操作" align="center" width="200" fixed="right">
         <template #default="scope">
+          <el-button link type="primary" @click="openDetail(scope.row.id)" v-hasPermi="['bus:award:query']">查看</el-button>
           <el-button link type="primary" @click="openForm('update', scope.row.id)" v-hasPermi="['bus:award:update']">修改</el-button>
           <el-button link type="danger" @click="handleDelete(scope.row.id)" v-hasPermi="['bus:award:delete']">删除</el-button>
         </template>
@@ -42,12 +43,15 @@
     <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" @pagination="getList" />
   </ContentWrap>
   <AwardForm ref="formRef" @success="getList" />
+  <AwardDetail ref="detailRef" />
 </template>
 <script lang="ts" setup>
 import { DICT_TYPE, getStrDictOptions } from '@/utils/dict'
 import { dateFormatter, dateFormatter2 } from '@/utils/formatTime'
 import * as AwardApi from '@/api/bus/award'
 import AwardForm from './AwardForm.vue'
+import AwardDetail from './AwardDetail.vue'
+
 defineOptions({ name: 'BusAward' })
 const message = useMessage()
 const { t } = useI18n()
@@ -61,6 +65,8 @@ const handleQuery = () => { queryParams.pageNo = 1; getList() }
 const resetQuery = () => { queryFormRef.value?.resetFields(); handleQuery() }
 const formRef = ref()
 const openForm = (type: string, id?: number) => { formRef.value.open(type, id) }
+const detailRef = ref()
+const openDetail = (id: number) => { detailRef.value.open(id) }
 const handleDelete = async (id: number) => { try { await message.delConfirm(); await AwardApi.deleteAward(id); message.success(t('common.delSuccess')); await getList() } catch {} }
 const checkedIds = ref<number[]>([])
 const handleRowCheckboxChange = (rows: AwardApi.AwardVO[]) => { checkedIds.value = rows.map((row) => row.id!) }

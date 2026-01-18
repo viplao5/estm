@@ -17,6 +17,7 @@ public interface TechnicalSecretMapper extends BaseMapperX<TechnicalSecretDO> {
                 .eqIfPresent(TechnicalSecretDO::getSecretLevel, reqVO.getSecretLevel())
                 .inSqlIfPresent(TechnicalSecretDO::getId, reqVO.getProjectId() != null ?
                         "SELECT achievement_id FROM bus_project_achievement WHERE achievement_type = 'SECRET' AND project_id = " + reqVO.getProjectId() : null)
+                .inIfPresent(TechnicalSecretDO::getId, reqVO.getIds())
                 .orderByDesc(TechnicalSecretDO::getId));
     }
 
