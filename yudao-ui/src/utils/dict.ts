@@ -247,5 +247,25 @@ export enum DICT_TYPE {
   IOT_ALERT_RECEIVE_TYPE = 'iot_alert_receive_type', // IoT 告警接收类型
   IOT_OTA_TASK_DEVICE_SCOPE = 'iot_ota_task_device_scope', // IoT OTA任务设备范围
   IOT_OTA_TASK_STATUS = 'iot_ota_task_status', // IoT OTA 任务状态
-  IOT_OTA_TASK_RECORD_STATUS = 'iot_ota_task_record_status' // IoT OTA 记录状态
+  IOT_OTA_TASK_RECORD_STATUS = 'iot_ota_task_record_status', // IoT OTA 记录状态
+
+  // ========== BUS - 科技成果管理模块 ==========
+  BUS_EDU_DEGREE = 'bus_edu_degree', // 学历
+  BUS_TITLE = 'bus_title', // 职称
+  BUS_IP_CATEGORY = 'bus_ip_category', // 知识产权类型
+  BUS_IP_STATUS = 'bus_ip_status', // 知识产权状态
+  BUS_IP_SOURCE = 'bus_ip_source', // 知识产权来源
+  BUS_SECRET_TYPE = 'bus_secret_type', // 技术秘密类型
+  BUS_SECRET_LEVEL = 'bus_secret_level', // 保密级别
+  BUS_PROJECT_CATEGORY = 'bus_project_category', // 研发项目类别
+  BUS_PROJECT_STATUS = 'bus_project_status', // 研发项目状态
+  BUS_PLATFORM_LEVEL = 'bus_platform_level', // 科研平台级别
+  BUS_PAPER_INDEXING = 'bus_paper_indexing', // 论文收录情况
+  BUS_STANDARD_TYPE = 'bus_standard_type', // 标准类型
+  BUS_STANDARD_STATUS = 'bus_standard_status', // 标准状态
+  BUS_STANDARD_ROLE = 'bus_standard_role', // 标准公司角色
+  BUS_AWARD_LEVEL = 'bus_award_level', // 奖励级别
+  BUS_AWARD_GRADE = 'bus_award_grade', // 奖励等级
+  BUS_PRODUCT_CATEGORY = 'bus_product_category', // 产品类别
+  BUS_PRODUCT_STATUS = 'bus_product_status' // 产品状态
 }

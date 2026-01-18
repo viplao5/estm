@@ -132,4 +132,11 @@ public class LambdaQueryWrapperX<T> extends LambdaQueryWrapper<T> {
         return this;
     }
 
+    public LambdaQueryWrapperX<T> inSqlIfPresent(SFunction<T, ?> column, String inValue) {
+        if (StringUtils.hasText(inValue)) {
+            return (LambdaQueryWrapperX<T>) super.inSql(column, inValue);
+        }
+        return this;
+    }
+
 }
