@@ -144,6 +144,22 @@ public class IntellectualPropertyServiceImpl implements IntellectualPropertyServ
 
     @Override
     public PageResult<IntellectualPropertyDO> getIPPage(IntellectualPropertyPageReqVO pageReqVO) {
+        // 如果有 staffId，先查询关联的 IP ID
+        if (pageReqVO.getStaffId() != null) {
+            List<AchievementStaffDO> relations = achievementStaffMapper.selectByStaffIdAndType(pageReqVO.getStaffId(), "IP");
+            if (cn.hutool.core.collection.CollUtil.isEmpty(relations)) {
+                return PageResult.empty();
+            }
+            List<Long> ipIds = cn.hutool.core.collection.CollUtil.map(relations, AchievementStaffDO::getAchievementId, true);
+            if (pageReqVO.getIds() != null) {
+                pageReqVO.setIds(cn.hutool.core.collection.CollUtil.intersection(pageReqVO.getIds(), ipIds));
+                if (cn.hutool.core.collection.CollUtil.isEmpty(pageReqVO.getIds())) {
+                    return PageResult.empty();
+                }
+            } else {
+                pageReqVO.setIds(ipIds);
+            }
+        }
         return ipMapper.selectPage(pageReqVO);
     }
 

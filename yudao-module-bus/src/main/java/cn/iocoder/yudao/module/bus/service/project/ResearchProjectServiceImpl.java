@@ -138,6 +138,39 @@ public class ResearchProjectServiceImpl implements ResearchProjectService {
 
     @Override
     public PageResult<ResearchProjectDO> getProjectPage(ResearchProjectPageReqVO pageReqVO) {
+        // 如果有 staffId，先查询关联的项目 ID
+        if (pageReqVO.getStaffId() != null) {
+            List<AchievementStaffDO> relations = achievementStaffMapper.selectByStaffIdAndType(pageReqVO.getStaffId(), "PROJECT");
+            if (cn.hutool.core.collection.CollUtil.isEmpty(relations)) {
+                return PageResult.empty();
+            }
+            // 提取项目ID列表
+            List<Long> projectIds = cn.hutool.core.collection.CollUtil.map(relations, AchievementStaffDO::getAchievementId, true);
+            // 这里实际上应该取交集，但 PageParam 通常没有 ids 字段供前端直接传。
+            // Yudao 的 PageParam 本身没有 ids，但 Mybatis-Plus 这里的 wrapper 可以加 in
+            // 我们需要 modify ResearchProjectMapper.selectPage to accept ids or modify reqVO to have ids (BaseMapperX usually handles collection in wrapper if we pass it)
+            // 但是这里 selectPage 是自定义的 default 方法 (BaseMapperX 扩展)，它接受 reqVO。
+            // 简单做法：我们修改 ResearchProjectMapper 的 selectPage 方法，但这比较麻烦。
+            // 更好的做法：我们给 ResearchProjectPageReqVO 加一个 ids 字段（虽然前端不传，但 Service 层可以 set），
+            // 然后在 Mapper 里处理 ids in。
+            // 让我们看看 ResearchProjectPageReqVO 是否有 ids。它继承 PageParam。
+            // 让我们给 ResearchProjectPageReqVO 加个 ids 字段 (Hidden for frontend usually, but internal use)
+            // 或者直接用 LambdaQueryWrapperX 在这里构建，不用 default selectPage.
+            // 考虑到 consistency，我们在 VO 加个 ids 字段，然后在 Mapper 加 inQuery.
+            // 但现在不能改 VO 的 ids 字段（它是通用的吗？）。
+            // 让我们先看看 ResearchProjectPageReqVO.java (已阅，没有 ids)。
+            // 我们可以直接在这里用 mapper.selectPage(reqVO, wrapper) 的形式，重写 wrapper 逻辑。
+            
+            // 重新构建 wrapper
+            return projectMapper.selectPage(pageReqVO, new cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX<ResearchProjectDO>()
+                    .likeIfPresent(ResearchProjectDO::getName, pageReqVO.getName())
+                    .eqIfPresent(ResearchProjectDO::getCategory, pageReqVO.getCategory())
+                    .eqIfPresent(ResearchProjectDO::getStatus, pageReqVO.getStatus())
+                    .eqIfPresent(ResearchProjectDO::getLeaderUserId, pageReqVO.getLeaderUserId())
+                    .betweenIfPresent(ResearchProjectDO::getStartDate, pageReqVO.getStartDate())
+                    .in(ResearchProjectDO::getId, projectIds) // 核心过滤
+                    .orderByDesc(ResearchProjectDO::getId));
+        }
         return projectMapper.selectPage(pageReqVO);
     }
 

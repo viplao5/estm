@@ -135,6 +135,22 @@ public class TechnicalSecretServiceImpl implements TechnicalSecretService {
 
     @Override
     public PageResult<TechnicalSecretDO> getSecretPage(TechnicalSecretPageReqVO pageReqVO) {
+        // 如果有 staffId，先查询关联的 Secret ID
+        if (pageReqVO.getStaffId() != null) {
+            List<AchievementStaffDO> relations = achievementStaffMapper.selectByStaffIdAndType(pageReqVO.getStaffId(), "SECRET");
+            if (cn.hutool.core.collection.CollUtil.isEmpty(relations)) {
+                return PageResult.empty();
+            }
+            List<Long> secretIds = cn.hutool.core.collection.CollUtil.map(relations, AchievementStaffDO::getAchievementId, true);
+            if (pageReqVO.getIds() != null) {
+                pageReqVO.setIds(cn.hutool.core.collection.CollUtil.intersection(pageReqVO.getIds(), secretIds));
+                if (cn.hutool.core.collection.CollUtil.isEmpty(pageReqVO.getIds())) {
+                    return PageResult.empty();
+                }
+            } else {
+                pageReqVO.setIds(secretIds);
+            }
+        }
         return secretMapper.selectPage(pageReqVO);
     }
 

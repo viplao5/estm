@@ -132,6 +132,22 @@ public class StandardServiceImpl implements StandardService {
 
     @Override
     public PageResult<StandardDO> getStandardPage(StandardPageReqVO pageReqVO) {
+        if (pageReqVO.getStaffId() != null) {
+            List<AchievementStaffDO> relations = achievementStaffMapper.selectByStaffIdAndType(pageReqVO.getStaffId(), "STANDARD");
+            if (cn.hutool.core.collection.CollUtil.isEmpty(relations)) {
+                return PageResult.empty();
+            }
+            List<Long> standardIds = cn.hutool.core.collection.CollUtil.map(relations, AchievementStaffDO::getAchievementId, true);
+
+            return standardMapper.selectPage(pageReqVO, new cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX<StandardDO>()
+                    .likeIfPresent(StandardDO::getName, pageReqVO.getName())
+                    .eqIfPresent(StandardDO::getType, pageReqVO.getType())
+                    .eqIfPresent(StandardDO::getStatus, pageReqVO.getStatus())
+                    .inSqlIfPresent(StandardDO::getId, pageReqVO.getProjectId() != null ?
+                            "SELECT achievement_id FROM bus_project_achievement WHERE achievement_type = 'STANDARD' AND project_id = " + pageReqVO.getProjectId() : null)
+                    .in(StandardDO::getId, standardIds)
+                    .orderByDesc(StandardDO::getId));
+        }
         return standardMapper.selectPage(pageReqVO);
     }
 

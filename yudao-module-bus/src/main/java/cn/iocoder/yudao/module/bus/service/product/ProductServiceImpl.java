@@ -185,12 +185,10 @@ public class ProductServiceImpl implements ProductService {
         }
         // 如果有关联技术秘密 ID，先查询关联的产品ID
         if (pageReqVO.getSecretId() != null) {
-            List<ProductAchievementDO> relations = productAchievementMapper.selectListByAchievementIdAndType(pageReqVO.getSecretId(), "SECRET");
+            List<ProductAchievementDO> relations = productAchievementMapper.selectListByProductIdAndType(pageReqVO.getSecretId(), "SECRET");
             if (cn.hutool.core.collection.CollUtil.isEmpty(relations)) {
                 return PageResult.empty();
             }
-            // 如果已有ids（比如同时传了ipId），则取交集，或者根据业务需求处理。这里简单覆盖或合并？
-            // 通常不会同时传，这里做个简单处理：如果已有ID列表，则取交集
             List<Long> secretProductIds = cn.hutool.core.collection.CollUtil.map(relations, ProductAchievementDO::getProductId, true);
             if (pageReqVO.getIds() != null) {
                 pageReqVO.setIds(cn.hutool.core.collection.CollUtil.intersection(pageReqVO.getIds(), secretProductIds));
@@ -199,6 +197,23 @@ public class ProductServiceImpl implements ProductService {
                 }
             } else {
                 pageReqVO.setIds(secretProductIds);
+            }
+        }
+        
+        // 如果有 staffId，先查询关联的产品ID
+        if (pageReqVO.getStaffId() != null) {
+            List<AchievementStaffDO> relations = achievementStaffMapper.selectByStaffIdAndType(pageReqVO.getStaffId(), "PRODUCT");
+            if (cn.hutool.core.collection.CollUtil.isEmpty(relations)) {
+                return PageResult.empty();
+            }
+            List<Long> productIds = cn.hutool.core.collection.CollUtil.map(relations, AchievementStaffDO::getAchievementId, true);
+            if (pageReqVO.getIds() != null) {
+                pageReqVO.setIds(cn.hutool.core.collection.CollUtil.intersection(pageReqVO.getIds(), productIds));
+                if (cn.hutool.core.collection.CollUtil.isEmpty(pageReqVO.getIds())) {
+                    return PageResult.empty();
+                }
+            } else {
+                pageReqVO.setIds(productIds);
             }
         }
         return productMapper.selectPage(pageReqVO);

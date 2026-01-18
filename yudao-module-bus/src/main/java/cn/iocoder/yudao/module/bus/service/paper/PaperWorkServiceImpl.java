@@ -135,6 +135,23 @@ public class PaperWorkServiceImpl implements PaperWorkService {
 
     @Override
     public PageResult<PaperWorkDO> getPaperPage(PaperWorkPageReqVO pageReqVO) {
+        if (pageReqVO.getStaffId() != null) {
+            List<AchievementStaffDO> relations = achievementStaffMapper.selectByStaffIdAndType(pageReqVO.getStaffId(), "PAPER");
+            if (cn.hutool.core.collection.CollUtil.isEmpty(relations)) {
+                return PageResult.empty();
+            }
+            List<Long> paperIds = cn.hutool.core.collection.CollUtil.map(relations, AchievementStaffDO::getAchievementId, true);
+            
+            return paperMapper.selectPage(pageReqVO, new cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX<PaperWorkDO>()
+                    .likeIfPresent(PaperWorkDO::getTitle, pageReqVO.getTitle())
+                    .likeIfPresent(PaperWorkDO::getPublication, pageReqVO.getPublication())
+                    .eqIfPresent(PaperWorkDO::getIndexing, pageReqVO.getIndexing())
+                    .eqIfPresent(PaperWorkDO::getPubYear, pageReqVO.getPubYear())
+                    .inSqlIfPresent(PaperWorkDO::getId, pageReqVO.getProjectId() != null ?
+                            "SELECT achievement_id FROM bus_project_achievement WHERE achievement_type = 'PAPER' AND project_id = " + pageReqVO.getProjectId() : null)
+                    .in(PaperWorkDO::getId, paperIds)
+                    .orderByDesc(PaperWorkDO::getId));
+        }
         return paperMapper.selectPage(pageReqVO);
     }
 

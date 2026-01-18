@@ -132,6 +132,22 @@ public class AwardServiceImpl implements AwardService {
 
     @Override
     public PageResult<AwardDO> getAwardPage(AwardPageReqVO pageReqVO) {
+        if (pageReqVO.getStaffId() != null) {
+            List<AchievementStaffDO> relations = achievementStaffMapper.selectByStaffIdAndType(pageReqVO.getStaffId(), "AWARD");
+            if (cn.hutool.core.collection.CollUtil.isEmpty(relations)) {
+                return PageResult.empty();
+            }
+            List<Long> awardIds = cn.hutool.core.collection.CollUtil.map(relations, AchievementStaffDO::getAchievementId, true);
+
+            return awardMapper.selectPage(pageReqVO, new cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX<AwardDO>()
+                    .likeIfPresent(AwardDO::getName, pageReqVO.getName())
+                    .eqIfPresent(AwardDO::getLevel, pageReqVO.getLevel())
+                    .eqIfPresent(AwardDO::getGrade, pageReqVO.getGrade())
+                    .inSqlIfPresent(AwardDO::getId, pageReqVO.getProjectId() != null ?
+                            "SELECT achievement_id FROM bus_project_achievement WHERE achievement_type = 'AWARD' AND project_id = " + pageReqVO.getProjectId() : null)
+                    .in(AwardDO::getId, awardIds)
+                    .orderByDesc(AwardDO::getId));
+        }
         return awardMapper.selectPage(pageReqVO);
     }
 

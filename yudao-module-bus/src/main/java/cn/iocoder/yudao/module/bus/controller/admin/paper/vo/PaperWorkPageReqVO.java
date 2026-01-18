@@ -21,4 +21,7 @@ public class PaperWorkPageReqVO extends PageParam {
     private Integer pubYear;
     @Schema(description = "关联研发项目ID")
     private Long projectId;
+
+    @Schema(description = "关联作者ID")
+    private Long staffId;
 }

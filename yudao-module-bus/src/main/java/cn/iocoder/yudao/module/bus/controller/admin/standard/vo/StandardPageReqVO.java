@@ -19,4 +19,7 @@ public class StandardPageReqVO extends PageParam {
     private String status;
     @Schema(description = "关联研发项目ID")
     private Long projectId;
+
+    @Schema(description = "关联人员ID")
+    private Long staffId;
 }

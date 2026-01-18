@@ -30,4 +30,7 @@ public class ResearchPlatformPageReqVO extends PageParam {
     @DateTimeFormat(pattern = FORMAT_YEAR_MONTH_DAY_HOUR_MINUTE_SECOND)
     private LocalDateTime[] certDate;
 
+    @Schema(description = "关联人员ID")
+    private Long staffId;
+
 }

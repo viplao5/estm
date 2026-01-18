@@ -28,6 +28,9 @@ public class ProductServicePageReqVO extends PageParam {
     @Schema(description = "关联技术秘密 ID")
     private Long secretId;
 
+    @Schema(description = "关联人员ID")
+    private Long staffId;
+
     @Schema(description = "ID列表")
     private Collection<Long> ids;
 }

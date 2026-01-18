@@ -125,6 +125,21 @@ public class ResearchPlatformServiceImpl implements ResearchPlatformService {
 
     @Override
     public PageResult<ResearchPlatformDO> getPlatformPage(ResearchPlatformPageReqVO pageReqVO) {
+        if (pageReqVO.getStaffId() != null) {
+            List<AchievementStaffDO> relations = achievementStaffMapper.selectByStaffIdAndType(pageReqVO.getStaffId(), "PLATFORM");
+            if (cn.hutool.core.collection.CollUtil.isEmpty(relations)) {
+                return PageResult.empty();
+            }
+            List<Long> platformIds = cn.hutool.core.collection.CollUtil.map(relations, AchievementStaffDO::getAchievementId, true);
+
+            return platformMapper.selectPage(pageReqVO, new cn.iocoder.yudao.framework.mybatis.core.query.LambdaQueryWrapperX<ResearchPlatformDO>()
+                    .likeIfPresent(ResearchPlatformDO::getName, pageReqVO.getName())
+                    .eqIfPresent(ResearchPlatformDO::getLevel, pageReqVO.getLevel())
+                    .likeIfPresent(ResearchPlatformDO::getCertUnit, pageReqVO.getCertUnit())
+                    .betweenIfPresent(ResearchPlatformDO::getCertDate, pageReqVO.getCertDate())
+                    .in(ResearchPlatformDO::getId, platformIds)
+                    .orderByDesc(ResearchPlatformDO::getId));
+        }
         return platformMapper.selectPage(pageReqVO);
     }
 

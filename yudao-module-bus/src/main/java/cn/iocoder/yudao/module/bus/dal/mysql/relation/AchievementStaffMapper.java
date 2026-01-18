@@ -20,6 +20,12 @@ public interface AchievementStaffMapper extends BaseMapperX<AchievementStaffDO> 
                 .eq(AchievementStaffDO::getStaffId, staffId));
     }
 
+    default List<AchievementStaffDO> selectByStaffIdAndType(Long staffId, String achievementType) {
+        return selectList(new LambdaQueryWrapperX<AchievementStaffDO>()
+                .eq(AchievementStaffDO::getStaffId, staffId)
+                .eq(AchievementStaffDO::getAchievementType, achievementType));
+    }
+
     default void deleteByAchievementIdAndType(Long achievementId, String achievementType) {
         delete(new LambdaQueryWrapperX<AchievementStaffDO>()
                 .eq(AchievementStaffDO::getAchievementId, achievementId)
