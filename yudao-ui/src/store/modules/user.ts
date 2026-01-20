@@ -11,6 +11,7 @@ interface UserVO {
   avatar: string
   nickname: string
   deptId: number
+  packageId?: number
 }
 
 interface UserInfoVO {
@@ -60,7 +61,7 @@ export const useUserStore = defineStore('admin-user', {
         // 特殊：在有缓存的情况下，进行加载。但是即使加载失败，也不影响后续的操作，保证可以进入系统
         try {
           userInfo = await getInfo()
-        } catch (error) {}
+        } catch (error) { }
       }
       this.permissions = new Set(userInfo.permissions || []) // 兜底为 [] https://t.zsxq.com/xCJew
       this.roles = userInfo.roles

@@ -12,6 +12,7 @@ import cn.iocoder.yudao.framework.datapermission.core.annotation.DataPermission;
 import cn.iocoder.yudao.framework.tenant.config.TenantProperties;
 import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
 import cn.iocoder.yudao.framework.tenant.core.util.TenantUtils;
+import cn.iocoder.yudao.framework.security.core.util.SecurityFrameworkUtils;
 import cn.iocoder.yudao.module.system.controller.admin.permission.vo.role.RoleSaveReqVO;
 import cn.iocoder.yudao.module.system.controller.admin.tenant.vo.tenant.TenantPageReqVO;
 import cn.iocoder.yudao.module.system.controller.admin.tenant.vo.tenant.TenantSaveReqVO;
@@ -37,9 +38,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import cn.iocoder.yudao.module.system.service.sms.SmsSendService;
+import cn.iocoder.yudao.framework.common.enums.UserTypeEnum;
+import cn.hutool.core.util.StrUtil;
+import java.time.LocalDateTime;
+import java.util.*;
 
 import static cn.iocoder.yudao.framework.common.exception.util.ServiceExceptionUtil.exception;
 import static cn.iocoder.yudao.module.system.enums.ErrorCodeConstants.*;
@@ -73,11 +76,47 @@ public class TenantServiceImpl implements TenantService {
     private MenuService menuService;
     @Resource
     private PermissionService permissionService;
+    @Resource
+    private SmsSendService smsSendService;
 
     @Override
     public List<Long> getTenantIdList() {
         List<TenantDO> tenants = tenantMapper.selectList();
         return CollectionUtils.convertList(tenants, TenantDO::getId);
+    }
+
+    @Override
+    @DSTransactional
+    public void activateTenant(Long id, Long packageId, Integer accountCount) {
+        // 校验是否存在
+        TenantDO tenant = tenantMapper.selectById(id);
+        if (tenant == null) {
+            throw exception(TENANT_NOT_EXISTS);
+        }
+        // 更新租户信息
+        TenantDO updateObj = new TenantDO();
+        updateObj.setId(id);
+        updateObj.setPackageId(packageId);
+        updateObj.setAccountCount(accountCount);
+        updateObj.setExpireTime(LocalDateTime.now().plusYears(1)); // 设置为 1 年后
+        updateObj.setStatus(CommonStatusEnum.ENABLE.getStatus()); // 确保开启
+        tenantMapper.updateById(updateObj);
+
+        // 如果套餐发生变化，同步更新菜单
+        if (!Objects.equals(tenant.getPackageId(), packageId)) {
+            TenantPackageDO tenantPackage = tenantPackageService.getTenantPackage(packageId);
+            if (tenantPackage != null) {
+                updateTenantRoleMenu(id, tenantPackage.getMenuIds());
+            }
+        }
+
+        // 发送短信通知
+        if (StrUtil.isNotBlank(tenant.getContactMobile())) {
+            Map<String, Object> templateParams = new HashMap<>();
+            templateParams.put("tenantName", tenant.getName());
+            smsSendService.sendSingleSms(tenant.getContactMobile(), null, UserTypeEnum.ADMIN.getValue(),
+                    "tenant-activate", templateParams);
+        }
     }
 
     @Override
@@ -107,6 +146,10 @@ public class TenantServiceImpl implements TenantService {
 
         // 创建租户
         TenantDO tenant = BeanUtils.toBean(createReqVO, TenantDO.class);
+        if (SecurityFrameworkUtils.getLoginUserId() == null) {
+            tenant.setCreator("1"); // 强制设置为 1，即超级管理员
+            tenant.setUpdater("1");
+        }
         tenantMapper.insert(tenant);
         // 创建租户的管理员
         TenantUtils.execute(tenant.getId(), () -> {
@@ -202,7 +245,8 @@ public class TenantServiceImpl implements TenantService {
                 // 如果是租户管理员，重新分配其权限为租户套餐的权限
                 if (Objects.equals(role.getCode(), RoleCodeEnum.TENANT_ADMIN.getCode())) {
                     permissionService.assignRoleMenu(role.getId(), menuIds);
-                    log.info("[updateTenantRoleMenu][租户管理员({}/{}) 的权限修改为({})]", role.getId(), role.getTenantId(), menuIds);
+                    log.info("[updateTenantRoleMenu][租户管理员({}/{}) 的权限修改为({})]", role.getId(), role.getTenantId(),
+                            menuIds);
                     return;
                 }
                 // 如果是其他角色，则去掉超过套餐的权限

@@ -8,6 +8,7 @@ import cn.iocoder.yudao.module.system.controller.admin.tenant.vo.tenant.TenantPa
 import cn.iocoder.yudao.module.system.dal.dataobject.tenant.TenantDO;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
@@ -42,6 +43,11 @@ public interface TenantMapper extends BaseMapperX<TenantDO> {
 
     default List<TenantDO> selectListByStatus(Integer status) {
         return selectList(TenantDO::getStatus, status);
+    }
+
+    default List<TenantDO> selectListByExpireTimeBetween(LocalDateTime start, LocalDateTime end) {
+        return selectList(new LambdaQueryWrapperX<TenantDO>()
+                .between(TenantDO::getExpireTime, start, end));
     }
 
 }

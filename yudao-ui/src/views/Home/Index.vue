@@ -26,101 +26,138 @@
     </div>
 
     <!-- 业务模块工作台 (Grid Layout for 10 items) -->
-    <div class="mb-20px">
-      <div class="flex items-center mb-16px px-4px border-l-4 border-blue-500 pl-12px">
-        <h3 class="text-18px font-bold text-gray-800 m-0">业务工作台</h3>
-      </div>
-      <div class="module-grid">
-        <div
-          v-for="(item, index) in moduleCards"
-          :key="`module-${index}`"
-          class="module-card bg-white p-20px rounded-8px shadow-sm hover:shadow-lg transition-all cursor-pointer group border border-gray-100 flex flex-col items-center justify-center"
-          @click="handleModuleClick(item.path)"
-        >
-          <div 
-            class="w-56px h-56px rounded-full flex items-center justify-center mb-12px group-hover:scale-110 transition-transform duration-300"
-            :style="{ backgroundColor: item.bg }"
+    <div v-if="packageId !== 10001">
+      <div class="mb-20px">
+        <div class="flex items-center mb-16px px-4px border-l-4 border-blue-500 pl-12px">
+          <h3 class="text-18px font-bold text-gray-800 m-0">业务工作台</h3>
+        </div>
+        <div class="module-grid">
+          <div
+            v-for="(item, index) in moduleCards"
+            :key="`module-${index}`"
+            class="module-card bg-white p-20px rounded-8px shadow-sm hover:shadow-lg transition-all cursor-pointer group border border-gray-100 flex flex-col items-center justify-center"
+            @click="handleModuleClick(item.path)"
           >
-             <Icon :icon="item.icon" :size="28" :color="item.color" />
-          </div>
-          <div class="text-14px font-medium text-gray-600 mb-4px">{{ item.name }}</div>
-          <div class="text-24px font-bold text-gray-800">
-            <CountTo :start-val="0" :end-val="item.count" :duration="2000" />
+            <div 
+              class="w-56px h-56px rounded-full flex items-center justify-center mb-12px group-hover:scale-110 transition-transform duration-300"
+              :style="{ backgroundColor: item.bg }"
+            >
+               <Icon :icon="item.icon" :size="28" :color="item.color" />
+            </div>
+            <div class="text-14px font-medium text-gray-600 mb-4px">{{ item.name }}</div>
+            <div class="text-24px font-bold text-gray-800">
+              <CountTo :start-val="0" :end-val="item.count" :duration="2000" />
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- 通知与提醒 (Split View) -->
+      <el-row :gutter="20">
+        <!-- 失效提醒 (Task Reminders) -->
+        <el-col :span="12" :xs="24" class="mb-20px">
+          <el-card shadow="never" class="h-full border-0 shadow-sm rounded-8px" :body-style="{ padding: '0' }">
+            <template #header>
+              <div class="flex justify-between items-center px-8px py-4px">
+                <span class="text-16px font-bold flex items-center text-gray-800">
+                  <Icon icon="ep:bell-filled" class="mr-8px text-red-500" />
+                  失效提醒
+                </span>
+                <el-tag type="danger" effect="plain" round v-if="reminderList.length > 0">
+                  {{ reminderList.length }} 待处理
+                </el-tag>
+              </div>
+            </template>
+            <div class="p-16px bg-white min-h-300px">
+              <el-scrollbar max-height="300px">
+                <div v-if="reminderList.length > 0">
+                  <div v-for="(item, index) in reminderList" :key="index" 
+                       class="py-12px px-8px border-b last:border-0 border-gray-50 hover:bg-red-50 transition-colors rounded-sm cursor-pointer group">
+                    <div class="flex justify-between items-start">
+                      <div class="flex-1 mr-16px">
+                        <div class="text-14px text-gray-800 group-hover:text-red-600 font-medium mb-4px line-clamp-1">
+                          {{ item.title }}
+                        </div>
+                      </div>
+                      <div class="text-12px text-gray-400 whitespace-nowrap">{{ formatTime(item.createTime, 'yyyy-MM-dd') }}</div>
+                    </div>
+                  </div>
+                </div>
+                <el-empty v-else description="暂无需要处理的提醒" :image-size="80" />
+              </el-scrollbar>
+            </div>
+          </el-card>
+        </el-col>
+
+        <!-- 系统通知 (System Notifications) -->
+        <el-col :span="12" :xs="24" class="mb-20px">
+          <el-card shadow="never" class="h-full border-0 shadow-sm rounded-8px" :body-style="{ padding: '0' }">
+            <template #header>
+              <div class="flex justify-between items-center px-8px py-4px">
+                <span class="text-16px font-bold flex items-center text-gray-800">
+                  <Icon icon="ep:notification" class="mr-8px text-blue-500" />
+                  系统通知
+                </span>
+                <el-link type="primary" :underline="false">查看更多</el-link>
+              </div>
+            </template>
+             <div class="p-16px bg-white min-h-300px">
+               <el-scrollbar max-height="300px">
+                <div v-if="systemNoticeList.length > 0">
+                  <div v-for="(item, index) in systemNoticeList" :key="index" 
+                       class="py-12px px-8px border-b last:border-0 border-gray-50 hover:bg-blue-50 transition-colors rounded-sm cursor-pointer group">
+                    <div class="flex justify-between items-start">
+                      <div class="flex-1 mr-16px">
+                         <div class="text-14px text-gray-800 group-hover:text-blue-600 font-medium mb-4px line-clamp-1">
+                          {{ item.title }}
+                        </div>
+                      </div>
+                      <div class="text-12px text-gray-400 whitespace-nowrap">{{ formatTime(item.createTime, 'yyyy-MM-dd') }}</div>
+                    </div>
+                  </div>
+                </div>
+                <el-empty v-else description="暂无系统通知" :image-size="80" />
+               </el-scrollbar>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
     </div>
 
-    <!-- 通知与提醒 (Split View) -->
-    <el-row :gutter="20">
-      <!-- 失效提醒 (Task Reminders) -->
-      <el-col :span="12" :xs="24" class="mb-20px">
-        <el-card shadow="never" class="h-full border-0 shadow-sm rounded-8px" :body-style="{ padding: '0' }">
-          <template #header>
-            <div class="flex justify-between items-center px-8px py-4px">
-              <span class="text-16px font-bold flex items-center text-gray-800">
-                <Icon icon="ep:bell-filled" class="mr-8px text-red-500" />
-                失效提醒
-              </span>
-              <el-tag type="danger" effect="plain" round v-if="reminderList.length > 0">
-                {{ reminderList.length }} 待处理
-              </el-tag>
-            </div>
-          </template>
-          <div class="p-16px bg-white min-h-300px">
-            <el-scrollbar max-height="300px">
-              <div v-if="reminderList.length > 0">
-                <div v-for="(item, index) in reminderList" :key="index" 
-                     class="py-12px px-8px border-b last:border-0 border-gray-50 hover:bg-red-50 transition-colors rounded-sm cursor-pointer group">
-                  <div class="flex justify-between items-start">
-                    <div class="flex-1 mr-16px">
-                      <div class="text-14px text-gray-800 group-hover:text-red-600 font-medium mb-4px line-clamp-1">
-                        {{ item.title }}
-                      </div>
-                    </div>
-                    <div class="text-12px text-gray-400 whitespace-nowrap">{{ formatTime(item.createTime, 'yyyy-MM-dd') }}</div>
-                  </div>
-                </div>
-              </div>
-              <el-empty v-else description="暂无需要处理的提醒" :image-size="80" />
-            </el-scrollbar>
+    <!-- 待审核提示 (Only shown for packageId 10001) -->
+    <div v-else class="pending-review-container">
+      <el-card class="review-card" shadow="hover">
+        <template #header>
+          <div class="flex items-center">
+            <Icon icon="ep:info-filled" class="mr-10px text-warning" :size="24" />
+            <span class="text-18px font-bold">账号审核中</span>
           </div>
-        </el-card>
-      </el-col>
+        </template>
+        <div class="p-20px">
+          <p class="text-16px text-gray-700 mb-20px">
+            您的企业账号已成功注册，目前处于<b>待审核</b>状态。请完成费用缴纳后联系管理员进行激活。
+          </p>
+          
+          <div class="bank-info bg-gray-50 p-20px rounded-8px border border-gray-100 mb-20px">
+            <h4 class="text-16px font-bold mb-16px border-b pb-8px">汇款账号信息</h4>
+            <el-descriptions :column="1" border>
+                <el-descriptions-item label="开户名称">某某科技有限公司</el-descriptions-item>
+                <el-descriptions-item label="开户银行">中国银行上海市分行</el-descriptions-item>
+                <el-descriptions-item label="银行账号">6222 0000 1111 2222 333</el-descriptions-item>
+                <el-descriptions-item label="汇款备注">企业注册手机号 + {{ username }}</el-descriptions-item>
+            </el-descriptions>
+          </div>
 
-      <!-- 系统通知 (System Notifications) -->
-      <el-col :span="12" :xs="24" class="mb-20px">
-        <el-card shadow="never" class="h-full border-0 shadow-sm rounded-8px" :body-style="{ padding: '0' }">
-          <template #header>
-            <div class="flex justify-between items-center px-8px py-4px">
-              <span class="text-16px font-bold flex items-center text-gray-800">
-                <Icon icon="ep:notification" class="mr-8px text-blue-500" />
-                系统通知
-              </span>
-              <el-link type="primary" :underline="false">查看更多</el-link>
-            </div>
-          </template>
-           <div class="p-16px bg-white min-h-300px">
-             <el-scrollbar max-height="300px">
-              <div v-if="systemNoticeList.length > 0">
-                <div v-for="(item, index) in systemNoticeList" :key="index" 
-                     class="py-12px px-8px border-b last:border-0 border-gray-50 hover:bg-blue-50 transition-colors rounded-sm cursor-pointer group">
-                  <div class="flex justify-between items-start">
-                    <div class="flex-1 mr-16px">
-                       <div class="text-14px text-gray-800 group-hover:text-blue-600 font-medium mb-4px line-clamp-1">
-                        {{ item.title }}
-                      </div>
-                    </div>
-                    <div class="text-12px text-gray-400 whitespace-nowrap">{{ formatTime(item.createTime, 'yyyy-MM-dd') }}</div>
-                  </div>
-                </div>
-              </div>
-              <el-empty v-else description="暂无系统通知" :image-size="80" />
-             </el-scrollbar>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+          <el-alert
+            title="温馨提示"
+            type="warning"
+            description="汇款完成后，通常在1-2个工作日内完成审核。如有疑问请咨询客服热线：400-123-4567。"
+            show-icon
+            :closable="false"
+          />
+        </div>
+      </el-card>
+    </div>
   </div>
 </template>
 
@@ -140,6 +177,7 @@ const loading = ref(true)
 
 const avatar = computed(() => userStore.getUser.avatar || '@/assets/imgs/avatar.gif')
 const username = computed(() => userStore.getUser.nickname)
+const packageId = computed(() => userStore.getUser.packageId)
 
 // 模块卡片定义 - Added background colors for icon containers
 const moduleCards = reactive([

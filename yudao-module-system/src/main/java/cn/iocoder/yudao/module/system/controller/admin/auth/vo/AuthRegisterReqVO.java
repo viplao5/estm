@@ -1,6 +1,5 @@
 package cn.iocoder.yudao.module.system.controller.admin.auth.vo;
 
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
@@ -26,4 +25,15 @@ public class AuthRegisterReqVO extends CaptchaVerificationReqVO {
     @NotEmpty(message = "密码不能为空")
     @Length(min = 4, max = 16, message = "密码长度为 4-16 位")
     private String password;
+
+    @Schema(description = "确认密码", requiredMode = Schema.RequiredMode.REQUIRED, example = "123456")
+    @NotEmpty(message = "确认密码不能为空")
+    @Length(min = 4, max = 16, message = "确认密码长度为 4-16 位")
+    private String confirmPassword;
+
+    @Schema(description = "租户名称", requiredMode = Schema.RequiredMode.REQUIRED, example = "芋艿")
+    private String tenantName;
+
+    @Schema(description = "租户编号", example = "1024")
+    private Long tenantId;
 }

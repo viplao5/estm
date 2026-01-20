@@ -33,6 +33,14 @@ public class TenantDO extends BaseDO {
      * 套餐编号 - 系统
      */
     public static final Long PACKAGE_ID_SYSTEM = 0L;
+    /**
+     * 套餐编号 - 试用（用于自动注册）
+     */
+    public static final Long PACKAGE_ID_TRIAL = 111L;
+    /**
+     * 套餐编号 - 待审核（用于自动注册，不包含任何功能菜单）
+     */
+    public static final Long PACKAGE_ID_PENDING = 10001L;
 
     /**
      * 租户编号，自增

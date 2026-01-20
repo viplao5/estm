@@ -136,6 +136,15 @@ public interface TenantService {
     List<Long> getTenantIdList();
 
     /**
+     * 激活租户（确认缴费）
+     *
+     * @param id           租户编号
+     * @param packageId    套餐编号
+     * @param accountCount 账号数量
+     */
+    void activateTenant(Long id, Long packageId, Integer accountCount);
+
+    /**
      * 校验租户是否合法
      *
      * @param id 租户编号

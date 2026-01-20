@@ -14,6 +14,7 @@ import cn.iocoder.yudao.framework.common.util.validation.ValidationUtils;
 import cn.iocoder.yudao.framework.datapermission.core.util.DataPermissionUtils;
 import cn.iocoder.yudao.module.infra.api.config.ConfigApi;
 import cn.iocoder.yudao.module.system.controller.admin.auth.vo.AuthRegisterReqVO;
+import cn.iocoder.yudao.module.system.controller.admin.tenant.vo.tenant.TenantSaveReqVO;
 import cn.iocoder.yudao.module.system.controller.admin.user.vo.profile.UserProfileUpdatePasswordReqVO;
 import cn.iocoder.yudao.module.system.controller.admin.user.vo.profile.UserProfileUpdateReqVO;
 import cn.iocoder.yudao.module.system.controller.admin.user.vo.user.UserImportExcelVO;
@@ -23,6 +24,8 @@ import cn.iocoder.yudao.module.system.controller.admin.user.vo.user.UserSaveReqV
 import cn.iocoder.yudao.module.system.dal.dataobject.dept.DeptDO;
 import cn.iocoder.yudao.module.system.dal.dataobject.dept.UserPostDO;
 import cn.iocoder.yudao.module.system.dal.dataobject.user.AdminUserDO;
+import cn.iocoder.yudao.module.system.dal.dataobject.tenant.TenantDO;
+import cn.iocoder.yudao.framework.tenant.core.context.TenantContextHolder;
 import cn.iocoder.yudao.module.system.dal.mysql.dept.UserPostMapper;
 import cn.iocoder.yudao.module.system.dal.mysql.user.AdminUserMapper;
 import cn.iocoder.yudao.module.system.service.dept.DeptService;
@@ -89,8 +92,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @LogRecord(type = SYSTEM_USER_TYPE, subType = SYSTEM_USER_CREATE_SUB_TYPE, bizNo = "{{#user.id}}",
-            success = SYSTEM_USER_CREATE_SUCCESS)
+    @LogRecord(type = SYSTEM_USER_TYPE, subType = SYSTEM_USER_CREATE_SUB_TYPE, bizNo = "{{#user.id}}", success = SYSTEM_USER_CREATE_SUCCESS)
     public Long createUser(UserSaveReqVO createReqVO) {
         // 1.1 校验账户配合
         tenantService.handleTenantInfo(tenant -> {
@@ -124,14 +126,43 @@ public class AdminUserServiceImpl implements AdminUserService {
         if (ObjUtil.notEqual(configApi.getConfigValueByKey(USER_REGISTER_ENABLED_KEY), "true")) {
             throw exception(USER_REGISTER_DISABLED);
         }
-        // 1.2 校验账户配合
+        // 1.2 获得租户。如果未传递租户编号，则基于租户名称查询
+        Long tenantId = registerReqVO.getTenantId();
+        if (tenantId == null && StrUtil.isNotBlank(registerReqVO.getTenantName())) {
+            TenantDO tenant = tenantService.getTenantByName(registerReqVO.getTenantName());
+            if (tenant == null) {
+                // 如果租户不存在，则自动创建租户
+                TenantSaveReqVO tenantSaveReqVO = new TenantSaveReqVO();
+                tenantSaveReqVO.setName(registerReqVO.getTenantName());
+                tenantSaveReqVO.setContactName(registerReqVO.getNickname());
+                tenantSaveReqVO.setContactMobile(registerReqVO.getUsername()); // 暂用用户名作为联系电话，通常注册时用户名就是手机号
+                tenantSaveReqVO.setPackageId(TenantDO.PACKAGE_ID_PENDING); // 默认待审核套餐 ID
+                tenantSaveReqVO.setExpireTime(LocalDateTime.now().plusDays(1)); // 默认 1 天过期（即待缴费状态）
+                tenantSaveReqVO.setAccountCount(1);
+                tenantSaveReqVO.setStatus(CommonStatusEnum.ENABLE.getStatus());
+                tenantSaveReqVO.setUsername(registerReqVO.getUsername());
+                tenantSaveReqVO.setPassword(registerReqVO.getPassword());
+
+                tenantId = tenantService.createTenant(tenantSaveReqVO);
+                TenantContextHolder.setTenantId(tenantId);
+                // createTenant 内部会创建管理员用户，所以这里直接返回该用户 ID
+                TenantDO newTenant = tenantService.getTenant(tenantId);
+                return newTenant.getContactUserId();
+            }
+            tenantId = tenant.getId();
+        }
+        if (tenantId != null) {
+            TenantContextHolder.setTenantId(tenantId);
+        }
+
+        // 1.3 校验账户配置
         tenantService.handleTenantInfo(tenant -> {
             long count = userMapper.selectCount();
             if (count >= tenant.getAccountCount()) {
                 throw exception(USER_COUNT_MAX, tenant.getAccountCount());
             }
         });
-        // 1.3 校验正确性
+        // 1.4 校验正确性
         validateUserForCreateOrUpdate(null, registerReqVO.getUsername(), null, null, null, null);
 
         // 2. 插入用户
@@ -144,8 +175,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @LogRecord(type = SYSTEM_USER_TYPE, subType = SYSTEM_USER_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}",
-            success = SYSTEM_USER_UPDATE_SUCCESS)
+    @LogRecord(type = SYSTEM_USER_TYPE, subType = SYSTEM_USER_UPDATE_SUB_TYPE, bizNo = "{{#updateReqVO.id}}", success = SYSTEM_USER_UPDATE_SUCCESS)
     public void updateUser(UserSaveReqVO updateReqVO) {
         updateReqVO.setPassword(null); // 特殊：此处不更新密码
         // 1. 校验正确性
@@ -206,8 +236,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     @Override
-    @LogRecord(type = SYSTEM_USER_TYPE, subType = SYSTEM_USER_UPDATE_PASSWORD_SUB_TYPE, bizNo = "{{#id}}",
-            success = SYSTEM_USER_UPDATE_PASSWORD_SUCCESS)
+    @LogRecord(type = SYSTEM_USER_TYPE, subType = SYSTEM_USER_UPDATE_PASSWORD_SUB_TYPE, bizNo = "{{#id}}", success = SYSTEM_USER_UPDATE_PASSWORD_SUCCESS)
     public void updateUserPassword(Long id, String password) {
         // 1. 校验用户存在
         AdminUserDO user = validateUserExists(id);
@@ -241,8 +270,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @LogRecord(type = SYSTEM_USER_TYPE, subType = SYSTEM_USER_DELETE_SUB_TYPE, bizNo = "{{#id}}",
-            success = SYSTEM_USER_DELETE_SUCCESS)
+    @LogRecord(type = SYSTEM_USER_TYPE, subType = SYSTEM_USER_DELETE_SUB_TYPE, bizNo = "{{#id}}", success = SYSTEM_USER_DELETE_SUCCESS)
     public void deleteUser(Long id) {
         // 1. 校验用户存在
         AdminUserDO user = validateUserExists(id);
@@ -284,8 +312,9 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Override
     public PageResult<AdminUserDO> getUserPage(UserPageReqVO reqVO) {
         // 如果有角色编号，查询角色对应的用户编号
-        Set<Long> userIds = reqVO.getRoleId() != null ?
-                permissionService.getUserRoleIdListByRoleId(singleton(reqVO.getRoleId())) : null;
+        Set<Long> userIds = reqVO.getRoleId() != null
+                ? permissionService.getUserRoleIdListByRoleId(singleton(reqVO.getRoleId()))
+                : null;
         if (userIds != null && userIds.isEmpty()) {
             return PageResult.empty();
         }
@@ -367,7 +396,7 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     private AdminUserDO validateUserForCreateOrUpdate(Long id, String username, String mobile, String email,
-                                               Long deptId, Set<Long> postIds) {
+            Long deptId, Set<Long> postIds) {
         // 关闭数据权限，避免因为没有数据权限，查询不到数据，进而导致唯一校验不正确
         return DataPermissionUtils.executeIgnore(() -> {
             // 校验用户存在
@@ -454,6 +483,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     /**
      * 校验旧密码
+     * 
      * @param id          用户 id
      * @param oldPassword 旧密码
      */
@@ -488,7 +518,7 @@ public class AdminUserServiceImpl implements AdminUserService {
             // 2.1.1 校验字段是否符合要求
             try {
                 ValidationUtils.validate(BeanUtils.toBean(importUser, UserSaveReqVO.class).setPassword(initPassword));
-            } catch (ConstraintViolationException ex){
+            } catch (ConstraintViolationException ex) {
                 respVO.getFailureUsernames().put(importUser.getUsername(), ex.getMessage());
                 return;
             }
