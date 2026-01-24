@@ -143,7 +143,7 @@ public class TechnicalSecretServiceImpl implements TechnicalSecretService {
             }
             List<Long> secretIds = cn.hutool.core.collection.CollUtil.map(relations, AchievementStaffDO::getAchievementId, true);
             if (pageReqVO.getIds() != null) {
-                pageReqVO.setIds(cn.hutool.core.collection.CollUtil.intersection(pageReqVO.getIds(), secretIds));
+                pageReqVO.setIds(cn.hutool.core.collection.CollUtil.newArrayList(cn.hutool.core.collection.CollUtil.intersection(pageReqVO.getIds(), secretIds)));
                 if (cn.hutool.core.collection.CollUtil.isEmpty(pageReqVO.getIds())) {
                     return PageResult.empty();
                 }

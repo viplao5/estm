@@ -191,7 +191,7 @@ public class ProductServiceImpl implements ProductService {
             }
             List<Long> secretProductIds = cn.hutool.core.collection.CollUtil.map(relations, ProductAchievementDO::getProductId, true);
             if (pageReqVO.getIds() != null) {
-                pageReqVO.setIds(cn.hutool.core.collection.CollUtil.intersection(pageReqVO.getIds(), secretProductIds));
+                pageReqVO.setIds(cn.hutool.core.collection.CollUtil.newArrayList(cn.hutool.core.collection.CollUtil.intersection(pageReqVO.getIds(), secretProductIds)));
                 if (cn.hutool.core.collection.CollUtil.isEmpty(pageReqVO.getIds())) {
                      return PageResult.empty();
                 }
@@ -208,7 +208,7 @@ public class ProductServiceImpl implements ProductService {
             }
             List<Long> productIds = cn.hutool.core.collection.CollUtil.map(relations, AchievementStaffDO::getAchievementId, true);
             if (pageReqVO.getIds() != null) {
-                pageReqVO.setIds(cn.hutool.core.collection.CollUtil.intersection(pageReqVO.getIds(), productIds));
+                pageReqVO.setIds(cn.hutool.core.collection.CollUtil.newArrayList(cn.hutool.core.collection.CollUtil.intersection(pageReqVO.getIds(), productIds)));
                 if (cn.hutool.core.collection.CollUtil.isEmpty(pageReqVO.getIds())) {
                     return PageResult.empty();
                 }

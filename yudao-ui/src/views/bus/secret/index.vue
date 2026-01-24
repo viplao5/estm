@@ -1,20 +1,28 @@
 <template>
   <ContentWrap>
-    <el-form class="-mb-15px" :model="queryParams" ref="queryFormRef" :inline="true" label-width="80px">
-      <el-form-item label="成果名称" prop="name"><el-input v-model="queryParams.name" placeholder="请输入名称" clearable @keyup.enter="handleQuery" class="!w-200px" /></el-form-item>
-      <el-form-item label="保密级别" prop="secretLevel"><el-input v-model="queryParams.secretLevel" placeholder="请输入保密级别" clearable class="!w-200px" /></el-form-item>
-      <el-form-item>
-        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
-        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
-        <el-button type="primary" plain @click="openForm('create')" v-hasPermi="['bus:technical-secret:create']"><Icon icon="ep:plus" class="mr-5px" /> 新增</el-button>
+    <div class="flex justify-between items-start">
+      <el-form class="-mb-15px flex-1" :model="queryParams" ref="queryFormRef" :inline="true" label-width="80px">
+        <el-form-item label="成果名称" prop="name"><el-input v-model="queryParams.name" placeholder="请输入名称" clearable @keyup.enter="handleQuery" class="!w-200px" /></el-form-item>
+        <el-form-item label="保密级别" prop="secretLevel"><el-input v-model="queryParams.secretLevel" placeholder="请输入保密级别" clearable class="!w-200px" /></el-form-item>
+        <el-form-item>
+          <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
+          <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
+        </el-form-item>
+      </el-form>
+      <div class="flex-shrink-0">
+        <el-button type="primary" @click="openForm('create')" v-hasPermi="['bus:technical-secret:create']"><Icon icon="ep:plus" class="mr-5px" /> 新增</el-button>
         <el-button type="danger" plain :disabled="checkedIds.length === 0" @click="handleDeleteBatch" v-hasPermi="['bus:technical-secret:delete']"><Icon icon="ep:delete" class="mr-5px" /> 批量删除</el-button>
-      </el-form-item>
-    </el-form>
+      </div>
+    </div>
   </ContentWrap>
   <ContentWrap>
-    <el-table v-loading="loading" :data="list" @selection-change="handleRowCheckboxChange">
+    <el-table v-loading="loading" :data="list" @selection-change="handleRowCheckboxChange" stripe class="refined-table">
       <el-table-column type="selection" width="55" />
-      <el-table-column label="成果名称" prop="name" min-width="200" />
+      <el-table-column label="成果名称" prop="name" min-width="200">
+        <template #default="scope">
+          <el-button link type="primary" @click="openDetail(scope.row.id)">{{ scope.row.name }}</el-button>
+        </template>
+      </el-table-column>
       <el-table-column label="成果类型" prop="type" min-width="100">
         <template #default="scope">
           <dict-tag :type="DICT_TYPE.BUS_SECRET_TYPE" :value="scope.row.type" />
@@ -28,9 +36,8 @@
       <el-table-column label="技术领域" prop="techField" min-width="120" />
       <el-table-column label="完成日期" prop="finishDate" width="120" :formatter="dateFormatter2" />
       <el-table-column label="创建时间" prop="createTime" width="180" :formatter="dateFormatter" />
-      <el-table-column label="操作" align="center" width="200" fixed="right">
+      <el-table-column label="操作" align="center" width="160" fixed="right">
         <template #default="scope">
-          <el-button link type="primary" @click="openDetail(scope.row.id)" v-hasPermi="['bus:technical-secret:query']">查看</el-button>
           <el-button link type="primary" @click="openForm('update', scope.row.id)" v-hasPermi="['bus:technical-secret:update']">修改</el-button>
           <el-button link type="danger" @click="handleDelete(scope.row.id)" v-hasPermi="['bus:technical-secret:delete']">删除</el-button>
         </template>
@@ -38,6 +45,7 @@
     </el-table>
     <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" @pagination="getList" />
   </ContentWrap>
+
   <SecretForm ref="formRef" @success="getList" />
   <SecretDetail ref="detailRef" />
 </template>

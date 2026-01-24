@@ -32,5 +32,5 @@ public class ProductServicePageReqVO extends PageParam {
     private Long staffId;
 
     @Schema(description = "ID列表")
-    private Collection<Long> ids;
+    private java.util.List<Long> ids;
 }

@@ -234,7 +234,7 @@ export default defineComponent({
                       key={v.path || ''}
                       class={[
                         `${prefixCls}__item`,
-                        'text-center text-15px font-medium relative py-10px mb-8px! cursor-pointer flex flex-col items-center justify-center transition-all',
+                        'text-center text-15px font-medium relative py-12px mb-12px! cursor-pointer flex flex-col items-center justify-center transition-all',
                         {
                           'is-active': isActive(v.path || '')
                         }
@@ -308,10 +308,12 @@ $prefix-cls: #{$namespace}-tab-menu;
 
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', 'FontAwesome' !important;
 
-    margin: 4px 8px;
+    margin: 6px 10px;
+    border-radius: 8px;
 
     &:hover {
       color: #fff;
+      background-color: rgba(255, 255, 255, 0.1);
     }
 
     &.is-active {

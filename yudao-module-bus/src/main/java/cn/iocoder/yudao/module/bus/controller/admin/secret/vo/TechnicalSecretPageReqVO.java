@@ -28,6 +28,5 @@ public class TechnicalSecretPageReqVO extends PageParam {
     private Long staffId;
 
     @Schema(description = "ID列表")
-    private java.util.Collection<Long> ids;
-
+    private java.util.List<Long> ids;
 }

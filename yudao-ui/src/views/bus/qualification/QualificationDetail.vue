@@ -1,25 +1,35 @@
 <template>
-  <Dialog v-model="dialogVisible" title="资质详情" width="900px">
-    <el-descriptions :column="2" border v-loading="loading">
-      <el-descriptions-item label="资质ID">{{ detailData.id }}</el-descriptions-item>
-      <el-descriptions-item label="资质名称">{{ detailData.name }}</el-descriptions-item>
-      <el-descriptions-item label="认证单位">{{ detailData.certUnit }}</el-descriptions-item>
-      <el-descriptions-item label="证书编号">{{ detailData.certNumber }}</el-descriptions-item>
-      <el-descriptions-item label="生效日期">{{ detailData.startDate ? formatDate(detailData.startDate, 'YYYY-MM-DD') : '' }}</el-descriptions-item>
-      <el-descriptions-item label="到期日期">{{ detailData.endDate ? formatDate(detailData.endDate, 'YYYY-MM-DD') : '' }}</el-descriptions-item>
-      <el-descriptions-item label="附件" :span="2">
-        <div v-if="detailData.fileUrl">
-          <a :href="detailData.fileUrl" target="_blank" class="text-primary">点击下载</a>
-        </div>
-        <div v-else>无</div>
-      </el-descriptions-item>
-      <el-descriptions-item label="备注" :span="2">{{ detailData.remark }}</el-descriptions-item>
-      <el-descriptions-item label="创建时间" :span="2">{{ detailData.createTime ? formatDate(detailData.createTime) : '' }}</el-descriptions-item>
-    </el-descriptions>
+  <el-drawer v-model="dialogVisible" title="资质详情" size="1200px">
+    <div v-loading="loading" class="p-20px">
+      <el-descriptions :column="2" border title="基本信息">
+        <el-descriptions-item label="资质ID">{{ detailData.id }}</el-descriptions-item>
+        <el-descriptions-item label="资质名称">{{ detailData.name }}</el-descriptions-item>
+        <el-descriptions-item label="认证单位">{{ detailData.certUnit }}</el-descriptions-item>
+        <el-descriptions-item label="证书编号">{{ detailData.certNumber }}</el-descriptions-item>
+        <el-descriptions-item label="生效日期">{{ detailData.startDate ? formatDate(detailData.startDate, 'YYYY-MM-DD') : '' }}</el-descriptions-item>
+        <el-descriptions-item label="到期日期">{{ detailData.endDate ? formatDate(detailData.endDate, 'YYYY-MM-DD') : '' }}</el-descriptions-item>
+        <el-descriptions-item label="证明材料" :span="2">
+          <div v-if="detailData.fileUrl">
+            <el-image 
+              style="width: 100px; height: 100px" 
+              :src="detailData.fileUrl" 
+              :preview-src-list="[detailData.fileUrl]" 
+              fit="cover" 
+              preview-teleported
+            />
+          </div>
+          <div v-else>无</div>
+        </el-descriptions-item>
+        <el-descriptions-item label="备注说明" :span="2">{{ detailData.remark }}</el-descriptions-item>
+        <el-descriptions-item label="创建时间" :span="2">{{ detailData.createTime ? formatDate(detailData.createTime) : '' }}</el-descriptions-item>
+      </el-descriptions>
+    </div>
     <template #footer>
-      <el-button @click="dialogVisible = false">关 闭</el-button>
+      <div style="flex: auto">
+        <el-button @click="dialogVisible = false">关 闭</el-button>
+      </div>
     </template>
-  </Dialog>
+  </el-drawer>
 </template>
 <script lang="ts" setup>
 import * as QualificationApi from '@/api/bus/qualification'

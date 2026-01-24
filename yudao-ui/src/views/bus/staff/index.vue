@@ -1,43 +1,46 @@
 <template>
   <!-- 搜索工作栏 -->
   <ContentWrap>
-    <el-form
-      class="-mb-15px"
-      :model="queryParams"
-      ref="queryFormRef"
-      :inline="true"
-      label-width="80px"
-    >
-      <el-form-item label="姓名" prop="name">
-        <el-input
-          v-model="queryParams.name"
-          placeholder="请输入姓名"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-200px"
-        />
-      </el-form-item>
-      <el-form-item label="岗位" prop="post">
-        <el-input
-          v-model="queryParams.post"
-          placeholder="请输入岗位"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-200px"
-        />
-      </el-form-item>
-      <el-form-item label="是否在职" prop="isActive">
-        <el-select v-model="queryParams.isActive" placeholder="请选择" clearable class="!w-200px">
-          <el-option label="在职" :value="true" />
-          <el-option label="离职" :value="false" />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
-        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
+    <div class="flex justify-between items-start">
+      <el-form
+        class="-mb-15px flex-1"
+        :model="queryParams"
+        ref="queryFormRef"
+        :inline="true"
+        label-width="80px"
+      >
+        <el-form-item label="姓名" prop="name">
+          <el-input
+            v-model="queryParams.name"
+            placeholder="请输入姓名"
+            clearable
+            @keyup.enter="handleQuery"
+            class="!w-200px"
+          />
+        </el-form-item>
+        <el-form-item label="岗位" prop="post">
+          <el-input
+            v-model="queryParams.post"
+            placeholder="请输入岗位"
+            clearable
+            @keyup.enter="handleQuery"
+            class="!w-200px"
+          />
+        </el-form-item>
+        <el-form-item label="是否在职" prop="isActive">
+          <el-select v-model="queryParams.isActive" placeholder="请选择" clearable class="!w-200px">
+            <el-option label="在职" :value="true" />
+            <el-option label="离职" :value="false" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
+          <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
+        </el-form-item>
+      </el-form>
+      <div class="flex-shrink-0">
         <el-button
           type="primary"
-          plain
           @click="openForm('create')"
           v-hasPermi="['bus:technical-staff:create']"
         >
@@ -52,15 +55,27 @@
         >
           <Icon icon="ep:delete" class="mr-5px" /> 批量删除
         </el-button>
-      </el-form-item>
-    </el-form>
+      </div>
+    </div>
   </ContentWrap>
 
   <!-- 列表 -->
   <ContentWrap>
-    <el-table v-loading="loading" :data="list" @selection-change="handleRowCheckboxChange">
+    <el-table 
+      v-loading="loading" 
+      :data="list" 
+      @selection-change="handleRowCheckboxChange" 
+      stripe 
+      class="refined-table"
+    >
       <el-table-column type="selection" width="55" />
-      <el-table-column label="姓名" prop="name" min-width="100" />
+      <el-table-column label="姓名" prop="name" min-width="100">
+        <template #default="scope">
+          <el-button link type="primary" @click="openDetail(scope.row.id)">
+            {{ scope.row.name }}
+          </el-button>
+        </template>
+      </el-table-column>
       <el-table-column label="岗位" prop="post" min-width="120" />
       <el-table-column label="毕业院校" prop="school" min-width="150" />
       <el-table-column label="专业" prop="major" min-width="120" />
@@ -95,16 +110,8 @@
         width="180"
         :formatter="dateFormatter"
       />
-      <el-table-column label="操作" align="center" width="200" fixed="right">
+      <el-table-column label="操作" align="center" width="160" fixed="right">
         <template #default="scope">
-          <el-button
-            link
-            type="primary"
-            @click="openDetail(scope.row.id)"
-            v-hasPermi="['bus:technical-staff:query']"
-          >
-            查看
-          </el-button>
           <el-button
             link
             type="primary"
@@ -124,6 +131,7 @@
         </template>
       </el-table-column>
     </el-table>
+
     <!-- 分页 -->
     <Pagination
       :total="total"

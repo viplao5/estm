@@ -1,24 +1,32 @@
 <template>
   <ContentWrap>
-    <el-form class="-mb-15px" :model="queryParams" ref="queryFormRef" :inline="true" label-width="80px">
-      <el-form-item label="标题" prop="title"><el-input v-model="queryParams.title" placeholder="请输入标题" clearable @keyup.enter="handleQuery" class="!w-200px" /></el-form-item>
-      <el-form-item label="收录情况" prop="indexing">
-        <el-select v-model="queryParams.indexing" placeholder="请选择收录情况" clearable class="!w-200px">
-          <el-option v-for="dict in getStrDictOptions(DICT_TYPE.BUS_PAPER_INDEXING)" :key="dict.value" :label="dict.label" :value="dict.value" />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
-        <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
-        <el-button type="primary" plain @click="openForm('create')" v-hasPermi="['bus:paper-work:create']"><Icon icon="ep:plus" class="mr-5px" /> 新增</el-button>
+    <div class="flex justify-between items-start">
+      <el-form class="-mb-15px flex-1" :model="queryParams" ref="queryFormRef" :inline="true" label-width="80px">
+        <el-form-item label="标题" prop="title"><el-input v-model="queryParams.title" placeholder="请输入标题" clearable @keyup.enter="handleQuery" class="!w-200px" /></el-form-item>
+        <el-form-item label="收录情况" prop="indexing">
+          <el-select v-model="queryParams.indexing" placeholder="请选择收录情况" clearable class="!w-200px">
+            <el-option v-for="dict in getStrDictOptions(DICT_TYPE.BUS_PAPER_INDEXING)" :key="dict.value" :label="dict.label" :value="dict.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button @click="handleQuery"><Icon icon="ep:search" class="mr-5px" /> 搜索</el-button>
+          <el-button @click="resetQuery"><Icon icon="ep:refresh" class="mr-5px" /> 重置</el-button>
+        </el-form-item>
+      </el-form>
+      <div class="flex-shrink-0">
+        <el-button type="primary" @click="openForm('create')" v-hasPermi="['bus:paper-work:create']"><Icon icon="ep:plus" class="mr-5px" /> 新增</el-button>
         <el-button type="danger" plain :disabled="checkedIds.length === 0" @click="handleDeleteBatch" v-hasPermi="['bus:paper-work:delete']"><Icon icon="ep:delete" class="mr-5px" /> 批量删除</el-button>
-      </el-form-item>
-    </el-form>
+      </div>
+    </div>
   </ContentWrap>
   <ContentWrap>
-    <el-table v-loading="loading" :data="list" @selection-change="handleRowCheckboxChange">
+    <el-table v-loading="loading" :data="list" @selection-change="handleRowCheckboxChange" stripe class="refined-table">
       <el-table-column type="selection" width="55" />
-      <el-table-column label="标题" prop="title" min-width="250" />
+      <el-table-column label="标题" prop="title" min-width="250">
+        <template #default="scope">
+          <el-button link type="primary" @click="openDetail(scope.row.id)">{{ scope.row.title }}</el-button>
+        </template>
+      </el-table-column>
       <el-table-column label="期刊/会议" prop="publication" min-width="150" />
       <el-table-column label="收录情况" prop="indexing" min-width="120">
         <template #default="scope">
@@ -28,9 +36,8 @@
       <el-table-column label="发表年份" prop="pubYear" min-width="100" />
       <el-table-column label="DOI" prop="doi" min-width="150" />
       <el-table-column label="创建时间" prop="createTime" width="180" :formatter="dateFormatter" />
-      <el-table-column label="操作" align="center" width="200" fixed="right">
+      <el-table-column label="操作" align="center" width="160" fixed="right">
         <template #default="scope">
-          <el-button link type="primary" @click="openDetail(scope.row.id)" v-hasPermi="['bus:paper-work:query']">查看</el-button>
           <el-button link type="primary" @click="openForm('update', scope.row.id)" v-hasPermi="['bus:paper-work:update']">修改</el-button>
           <el-button link type="danger" @click="handleDelete(scope.row.id)" v-hasPermi="['bus:paper-work:delete']">删除</el-button>
         </template>
@@ -38,6 +45,7 @@
     </el-table>
     <Pagination :total="total" v-model:page="queryParams.pageNo" v-model:limit="queryParams.pageSize" @pagination="getList" />
   </ContentWrap>
+
   <PaperForm ref="formRef" @success="getList" />
   <PaperDetail ref="detailRef" />
 </template>

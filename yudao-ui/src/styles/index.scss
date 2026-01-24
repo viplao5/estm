@@ -41,7 +41,7 @@
   --el-table-row-hover-bg-color: var(--el-fill-color-light);
 
   .el-table__row {
-    height: 60px;
+    height: 54px; // Slightly reduced height for compactness
 
     td.el-table__cell {
       border-bottom: 1px solid var(--el-border-color-extra-light) !important;
@@ -50,6 +50,66 @@
 
   .el-table__inner-wrapper::before {
     display: none;
+  }
+
+  td {
+    border: 1px solid #eee;
+    /* 行边框颜色 */
+    // border-width: 1px 0px 0px 1px;
+  }
+}
+
+// Global Refined Table Class (Achievement Management)
+.refined-table {
+  --el-table-header-bg-color: #f5f7fa;
+  --el-table-header-text-color: #333;
+  --el-table-border-color: #ebeef5;
+
+  .el-table__header-wrapper th {
+    background-color: var(--el-table-header-bg-color) !important;
+    color: var(--el-table-header-text-color) !important;
+    font-weight: bold !important;
+    height: 50px;
+    border-right: 1px solid var(--el-table-border-color) !important;
+    border-bottom: 1px solid var(--el-table-border-color) !important;
+  }
+
+  // Unit line visibility
+  .el-table__cell {
+    border-right: 1px solid var(--el-table-border-color);
+  }
+
+  .el-table__row--striped td.el-table__cell {
+    background-color: #F5F6F7 !important; // Subtle zebra stripe
+  }
+
+  // Name hyperlink color customization
+  .el-button--primary.is-link {
+    --el-button-text-color: #5b6dff !important;
+    font-weight: 500;
+
+    &:hover {
+      color: #3b4dff !important; // Slightly darker on hover
+    }
+  }
+}
+
+// Re-styling primary buttons to match the purple "Lingjian" theme
+.el-button--primary:not(.is-link):not(.is-text) {
+  --el-button-bg-color: #9d76ce !important;
+  --el-button-border-color: #9d76ce !important;
+  --el-button-hover-bg-color: #ae8adb !important;
+  --el-button-hover-border-color: #ae8adb !important;
+
+  &.is-plain {
+    --el-button-bg-color: #fff !important;
+    --el-button-text-color: #9d76ce !important;
+    --el-button-border-color: #9d76ce !important;
+
+    &:hover {
+      background-color: rgba(157, 118, 206, 0.1) !important;
+      color: #9d76ce !important;
+    }
   }
 }
 

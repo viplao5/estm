@@ -152,7 +152,7 @@ public class IntellectualPropertyServiceImpl implements IntellectualPropertyServ
             }
             List<Long> ipIds = cn.hutool.core.collection.CollUtil.map(relations, AchievementStaffDO::getAchievementId, true);
             if (pageReqVO.getIds() != null) {
-                pageReqVO.setIds(cn.hutool.core.collection.CollUtil.intersection(pageReqVO.getIds(), ipIds));
+                pageReqVO.setIds(cn.hutool.core.collection.CollUtil.newArrayList(cn.hutool.core.collection.CollUtil.intersection(pageReqVO.getIds(), ipIds)));
                 if (cn.hutool.core.collection.CollUtil.isEmpty(pageReqVO.getIds())) {
                     return PageResult.empty();
                 }
