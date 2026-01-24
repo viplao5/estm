@@ -107,19 +107,19 @@ const setVisible = () => {
     :is-custom="false"
     :label-width="labelWidth"
     :schema="newSchema"
-    class="-mb-15px"
+    class="compact-search-form"
     hide-required-asterisk
     @register="register"
   >
     <template #action>
-      <div v-if="layout === 'inline'">
+      <div v-if="layout === 'inline'" class="flex items-center">
         <!-- update by 芋艿：去除搜索的 type="primary"，颜色变淡一点 -->
-        <ElButton v-if="showSearch" @click="search">
+        <ElButton v-if="showSearch" @click="search" type="primary" class="branding-btn">
           <Icon class="mr-5px" icon="ep:search" />
           {{ t('common.query') }}
         </ElButton>
         <!-- update by 芋艿：将 icon="ep:refresh-right" 修改成 icon="ep:refresh"，和 ruoyi-vue 搜索保持一致  -->
-        <ElButton v-if="showReset" @click="reset">
+        <ElButton v-if="showReset" @click="reset" class="secondary-btn">
           <Icon class="mr-5px" icon="ep:refresh" />
           {{ t('common.reset') }}
         </ElButton>
@@ -128,7 +128,9 @@ const setVisible = () => {
           <Icon :icon="visible ? 'ep:arrow-up' : 'ep:arrow-down'" />
         </ElButton>
         <!-- add by 芋艿：补充在搜索后的按钮 -->
-        <slot name="actionMore"></slot>
+        <div class="ml-auto flex items-center">
+          <slot name="actionMore"></slot>
+        </div>
       </div>
     </template>
     <template v-for="name in Object.keys($slots)" :key="name" #[name]>
@@ -155,3 +157,30 @@ const setVisible = () => {
     </div>
   </template>
 </template>
+
+<style lang="scss" scoped>
+.compact-search-form {
+  :deep(.el-form-item) {
+    margin-bottom: 8px !important;
+    margin-right: 12px !important;
+  }
+}
+
+.branding-btn {
+  background-color: var(--el-color-primary) !important;
+  border-color: var(--el-color-primary) !important;
+  border-radius: 4px;
+}
+
+.secondary-btn {
+  background-color: transparent !important;
+  color: #666 !important;
+  border: 1px solid #dcdfe6 !important;
+  border-radius: 4px;
+  
+  &:hover {
+    color: var(--el-color-primary) !important;
+    border-color: var(--el-color-primary) !important;
+  }
+}
+</style>

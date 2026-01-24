@@ -19,6 +19,10 @@ export default defineComponent({
     menuSelect: {
       type: Function as PropType<(index: string) => void>,
       default: undefined
+    },
+    routers: {
+      type: Array as PropType<AppRouteRecordRaw[]>,
+      default: undefined
     }
   },
   setup(props) {
@@ -32,7 +36,7 @@ export default defineComponent({
 
     const menuMode = computed((): 'vertical' | 'horizontal' => {
       // 竖
-      const vertical: LayoutType[] = ['classic', 'topLeft', 'cutMenu']
+      const vertical: LayoutType[] = ['classic', 'topLeft', 'cutMenu', 'mixed']
 
       if (vertical.includes(unref(layout))) {
         return 'vertical'
@@ -42,7 +46,9 @@ export default defineComponent({
     })
 
     const routers = computed(() =>
-      unref(layout) === 'cutMenu' ? permissionStore.getMenuTabRouters : permissionStore.getRouters
+      props.routers 
+        ? props.routers 
+        : (unref(layout) === 'cutMenu' || unref(layout) === 'mixed' ? permissionStore.getMenuTabRouters : permissionStore.getRouters)
     )
 
     const collapse = computed(() => appStore.getCollapse)
@@ -87,7 +93,7 @@ export default defineComponent({
             unref(layout) === 'top' || unref(layout) === 'cutMenu' ? false : unref(collapse)
           }
           uniqueOpened={unref(layout) === 'top' ? false : unref(uniqueOpened)}
-          backgroundColor="var(--left-menu-bg-color)"
+          backgroundColor="var(--left-menu-bg-light-color)"
           textColor="var(--left-menu-text-color)"
           activeTextColor="var(--left-menu-text-active-color)"
           popperClass={
@@ -99,7 +105,7 @@ export default defineComponent({
         >
           {{
             default: () => {
-              const { renderMenuItem } = useRenderMenuItem(unref(menuMode))
+              const { renderMenuItem } = useRenderMenuItem()
               return renderMenuItem(unref(routers))
             }
           }}
@@ -112,10 +118,10 @@ export default defineComponent({
         id={prefixCls}
         class={[
           `${prefixCls} ${prefixCls}__${unref(menuMode)}`,
-          'h-[100%] overflow-hidden flex-col bg-[var(--left-menu-bg-color)]',
+          'h-[100%] overflow-hidden flex-col bg-[var(--left-menu-bg-light-color)]',
           {
-            'w-[var(--left-menu-min-width)]': unref(collapse) && unref(layout) !== 'cutMenu',
-            'w-[var(--left-menu-max-width)]': !unref(collapse) && unref(layout) !== 'cutMenu'
+            'w-0': unref(collapse) && unref(layout) !== 'mixed',
+            'w-[var(--left-menu-max-width)]': !unref(collapse) || unref(layout) === 'mixed'
           }
         ]}
       >
@@ -132,13 +138,21 @@ $prefix-cls: #{$namespace}-menu;
 .#{$prefix-cls} {
   position: relative;
   transition: width var(--transition-time-02);
+  background-color: var(--left-menu-bg-light-color) !important;
 
   :deep(.#{$elNamespace}-menu) {
     width: 100% !important;
     border-right: none;
+    background-color: var(--left-menu-bg-light-color) !important;
+    color: var(--left-menu-text-color) !important;
 
-    // 设置选中时子标题的颜色
+    .el-icon {
+      color: inherit !important;
+    }
+
+    // 设置项选中状态
     .is-active {
+      background-color: var(--left-menu-bg-active-color) !important;
       & > .#{$elNamespace}-sub-menu__title {
         color: var(--left-menu-text-active-color) !important;
       }

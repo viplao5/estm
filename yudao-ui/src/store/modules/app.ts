@@ -42,7 +42,7 @@ interface AppState {
 
 export const useAppStore = defineStore('app', {
   state: (): AppState => {
-    return {
+    const defaultState: AppState = {
       userInfo: 'userInfo', // 登录信息存储字段-建议每个项目换一个字段，避免与其他项目冲突
       sizeMap: ['default', 'large', 'small'],
       mobile: false, // 是否是移动端
@@ -68,28 +68,28 @@ export const useAppStore = defineStore('app', {
       greyMode: false, // 是否开始灰色模式，用于特殊悼念日
       fixedMenu: wsCache.get('fixedMenu') || false, // 是否固定菜单
 
-      layout: wsCache.get(CACHE_KEY.LAYOUT) || 'topLeft', // layout布局
+      layout: wsCache.get(CACHE_KEY.LAYOUT) || 'mixed', // layout布局
       isDark: wsCache.get(CACHE_KEY.IS_DARK) || false, // 是否是暗黑模式
       currentSize: wsCache.get('default') || 'default', // 组件尺寸
       theme: wsCache.get(CACHE_KEY.THEME) || {
         // 主题色
-        elColorPrimary: '#409eff',
+        elColorPrimary: '#9d76ce',
         // 左侧菜单边框颜色
-        leftMenuBorderColor: 'inherit',
-        // 左侧菜单背景颜色
-        leftMenuBgColor: '#001529',
-        // 左侧菜单浅色背景颜色
-        leftMenuBgLightColor: '#0f2438',
-        // 左侧菜单选中背景颜色
-        leftMenuBgActiveColor: 'var(--el-color-primary)',
-        // 左侧菜单收起选中背景颜色
-        leftMenuCollapseBgActiveColor: 'var(--el-color-primary)',
-        // 左侧菜单字体颜色
-        leftMenuTextColor: '#bfcbd9',
-        // 左侧菜单选中字体颜色
-        leftMenuTextActiveColor: '#fff',
+        leftMenuBorderColor: '#eee',
+        // 一级侧边栏背景颜色 (深色)
+        leftMenuBgColor: '#2D303B',
+        // 二级侧边栏背景颜色 (白色)
+        leftMenuBgLightColor: '#ffffff',
+        // 菜单选中背景颜色 (二级菜单)
+        leftMenuBgActiveColor: '#F3EFFF',
+        // 菜单收起选中背景颜色
+        leftMenuCollapseBgActiveColor: 'rgba(255, 255, 255, 0.15)',
+        // 菜单字体颜色 (二级菜单)
+        leftMenuTextColor: '#333',
+        // 菜单选中字体颜色 (二级菜单)
+        leftMenuTextActiveColor: '#9d76ce',
         // logo字体颜色
-        logoTitleTextColor: '#fff',
+        logoTitleTextColor: '#9d76ce',
         // logo边框颜色
         logoBorderColor: 'inherit',
         // 头部背景颜色
@@ -102,6 +102,14 @@ export const useAppStore = defineStore('app', {
         topToolBorderColor: '#eee'
       }
     }
+    // 强制执行一次迁移
+    if (!wsCache.get('layout_refactor_v4')) {
+      wsCache.set('layout_refactor_v4', true)
+      wsCache.delete(CACHE_KEY.THEME) // 清除旧主题缓存以应用新默认值
+      wsCache.set(CACHE_KEY.LAYOUT, 'mixed')
+      return { ...defaultState, layout: 'mixed' }
+    }
+    return defaultState
   },
   getters: {
     getBreadcrumb(): boolean {

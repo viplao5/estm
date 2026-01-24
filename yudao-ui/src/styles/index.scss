@@ -3,7 +3,7 @@
 @use './theme.scss';
 @use 'element-plus/theme-chalk/dark/css-vars.css';
 
-.reset-margin [class*='el-icon'] + span {
+.reset-margin [class*='el-icon']+span {
   margin-left: 2px !important;
 }
 
@@ -33,5 +33,77 @@
   & .spinner-icon {
     border-top-color: var(--el-color-primary);
     border-left-color: var(--el-color-primary);
+  }
+}
+
+// Table Style Enhancements
+.el-table {
+  --el-table-row-hover-bg-color: var(--el-fill-color-light);
+
+  .el-table__row {
+    height: 60px;
+
+    td.el-table__cell {
+      border-bottom: 1px solid var(--el-border-color-extra-light) !important;
+    }
+  }
+
+  .el-table__inner-wrapper::before {
+    display: none;
+  }
+}
+
+// Tag Style Enhancements
+.el-tag.is-round {
+  padding: 0 12px;
+  background-color: var(--el-tag-bg-color);
+  border: none;
+
+  &.el-tag--success {
+    background-color: rgba(103, 194, 58, 0.1);
+  }
+
+  &.el-tag--warning {
+    background-color: rgba(230, 162, 60, 0.1);
+  }
+
+  &.el-tag--danger {
+    background-color: rgba(245, 108, 108, 0.1);
+  }
+
+  &.el-tag--info {
+    background-color: rgba(144, 147, 153, 0.1);
+  }
+
+  &.el-tag--primary {
+    background-color: rgba(124, 77, 255, 0.1);
+  }
+}
+
+// Sidebar logic and layout fixes
+// 混合布局和经典布局的侧边栏背景
+.yudao-layout-classic,
+.yudao-layout-mixed {
+  .yudao-layout-content {
+    background-color: var(--app-content-bg-color);
+  }
+
+  // 侧边栏边框和背景补丁 (强制浅色)
+  .layout-border__right {
+    border-right: 1px solid var(--el-border-color-extra-light) !important;
+  }
+}
+
+// 侧边栏菜单样式深度美化 (强制应用主题变量)
+.yudao-layout-classic,
+.yudao-layout-mixed {
+  --el-menu-bg-color: var(--left-menu-bg-color);
+  --el-menu-text-color: var(--left-menu-text-color);
+  --el-menu-active-color: var(--left-menu-text-active-color);
+
+  // 鼠标悬停和激活状态的背景补丁
+  .el-menu-item:hover,
+  .el-sub-menu__title:hover {
+    background-color: rgba(124, 77, 255, 0.05) !important;
   }
 }

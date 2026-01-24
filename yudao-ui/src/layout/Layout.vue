@@ -38,6 +38,9 @@ const renderLayout = () => {
     case 'cutMenu':
       const { renderCutMenu } = useRenderLayout()
       return renderCutMenu()
+    case 'mixed':
+      const { renderMixed } = useRenderLayout()
+      return renderMixed()
     default:
       break
   }

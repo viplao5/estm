@@ -8,6 +8,8 @@ import AppView from './AppView.vue'
 import ToolHeader from './ToolHeader.vue'
 import { ElScrollbar } from 'element-plus'
 import { useDesign } from '@/hooks/web/useDesign'
+import { Icon } from '@/components/Icon'
+import { Collapse } from '@/layout/components/Collapse'
 
 const { getPrefixCls } = useDesign()
 
@@ -16,6 +18,9 @@ const prefixCls = getPrefixCls('layout')
 const appStore = useAppStore()
 
 const pageLoading = computed(() => appStore.getPageLoading)
+
+// 折叠图标
+const hamburger = computed(() => appStore.getHamburger)
 
 // 标签页
 const tagsView = computed(() => appStore.getTagsView)
@@ -35,7 +40,70 @@ const mobile = computed(() => appStore.getMobile)
 // 固定菜单
 const fixedMenu = computed(() => appStore.getFixedMenu)
 
+import TopMenu from '@/layout/components/TopMenu.vue'
+
 export const useRenderLayout = () => {
+  const renderMixed = () => {
+    return (
+      <>
+        <div
+          class={[
+            'relative flex items-center bg-[var(--top-header-bg-color)] layout-border__bottom dark:bg-[var(--el-bg-color)]',
+            { '!fixed top-0 left-0 z-10 w-full': fixedHeader.value }
+          ]}
+          style="transition: background-color var(--transition-time-02);"
+        >
+          {logo.value ? <Logo class="custom-hover"></Logo> : undefined}
+          <TopMenu class="flex-1"></TopMenu>
+          <ToolHeader></ToolHeader>
+        </div>
+        <div
+          class={[
+            'absolute left-0 w-full flex',
+            {
+              'top-[var(--logo-height)] h-[calc(100%-var(--logo-height))]': !fixedHeader.value,
+              'top-0 h-full !pt-[var(--logo-height)]': fixedHeader.value
+            }
+          ]}
+        >
+          <TabMenu></TabMenu>
+          <div
+            class={[
+              `${prefixCls}-content`,
+              'h-[100%] relative flex-1', // Changed to flex-1
+              {
+                // Removed w-[calc(100%-...)]
+              }
+            ]}
+            style="transition: all var(--transition-time-02);"
+          >
+            <ElScrollbar
+              v-loading={pageLoading.value}
+              class={[
+                `${prefixCls}-content-scrollbar`,
+                {
+                  '!h-[calc(100%-var(--tags-view-height))] mt-[calc(var(--tags-view-height))]':
+                    tagsView.value
+                }
+              ]}
+            >
+              {tagsView.value ? (
+                <TagsView
+                  class={[
+                    'layout-border__bottom absolute top-0 left-0 w-full z-9'
+                  ]}
+                  style="transition: all var(--transition-time-02);"
+                ></TagsView>
+              ) : undefined}
+
+              <AppView></AppView>
+            </ElScrollbar>
+          </div>
+        </div>
+      </>
+    )
+  }
+
   const renderClassic = () => {
     return (
       <>
@@ -58,7 +126,18 @@ export const useRenderLayout = () => {
               style="transition: all var(--transition-time-02);"
             ></Logo>
           ) : undefined}
-          <Menu class={[{ '!h-[calc(100%-var(--logo-height))]': logo.value }]}></Menu>
+          <Menu class={[{ '!h-[calc(100%-var(--logo-height)-40px)]': logo.value, '!h-[calc(100%-40px)]': !logo.value }]}></Menu>
+          <div
+            class="h-40px flex items-center justify-center cursor-pointer hover:bg-[var(--left-menu-bg-light-color)] border-t border-t-solid border-t-[var(--el-border-color-extra-light)]"
+            onClick={() => appStore.setCollapse(!appStore.getCollapse)}
+          >
+            <Icon
+              class="transition-all"
+              icon={appStore.getCollapse ? 'ep:expand' : 'ep:fold'}
+              color="var(--left-menu-text-color)"
+              size={18}
+            />
+          </div>
         </div>
         <div
           class={[
@@ -66,9 +145,9 @@ export const useRenderLayout = () => {
             'absolute top-0 h-[100%]',
             {
               'w-[calc(100%-var(--left-menu-min-width))] left-[var(--left-menu-min-width)]':
-                collapse.value && !mobile.value && !mobile.value,
+                collapse.value && !mobile.value,
               'w-[calc(100%-var(--left-menu-max-width))] left-[var(--left-menu-max-width)]':
-                !collapse.value && !mobile.value && !mobile.value,
+                !collapse.value && !mobile.value,
               'fixed !w-full !left-0': mobile.value
             }
           ]}
@@ -131,12 +210,9 @@ export const useRenderLayout = () => {
           <div
             class={[
               `${prefixCls}-content`,
-              'h-[100%]',
+              'h-[100%] flex-1', // Changed to flex-1
               {
-                'w-[calc(100%-var(--left-menu-min-width))] left-[var(--left-menu-min-width)]':
-                  collapse.value,
-                'w-[calc(100%-var(--left-menu-max-width))] left-[var(--left-menu-max-width)]':
-                  !collapse.value
+                // Removed w-[calc(100%-...)] and left-[...]
               }
             ]}
             style="transition: all var(--transition-time-02);"
@@ -233,16 +309,9 @@ export const useRenderLayout = () => {
           <div
             class={[
               `${prefixCls}-content`,
-              'h-[100%]',
+              'h-[100%] relative flex-1', // Changed to flex-1 and relative
               {
-                'w-[calc(100%-var(--tab-menu-min-width))] left-[var(--tab-menu-min-width)]':
-                  collapse.value && !fixedMenu.value,
-                'w-[calc(100%-var(--tab-menu-max-width))] left-[var(--tab-menu-max-width)]':
-                  !collapse.value && !fixedMenu.value,
-                'w-[calc(100%-var(--tab-menu-min-width)-var(--left-menu-max-width))] ml-[var(--left-menu-max-width)]':
-                  collapse.value && fixedMenu.value,
-                'w-[calc(100%-var(--tab-menu-max-width)-var(--left-menu-max-width))] ml-[var(--left-menu-max-width)]':
-                  !collapse.value && fixedMenu.value
+                // Removed absolute and hardcoded widths/lefts
               }
             ]}
             style="transition: all var(--transition-time-02);"
@@ -289,6 +358,7 @@ export const useRenderLayout = () => {
     renderClassic,
     renderTopLeft,
     renderTop,
-    renderCutMenu
+    renderCutMenu,
+    renderMixed
   }
 }

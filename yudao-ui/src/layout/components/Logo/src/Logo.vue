@@ -26,7 +26,7 @@ onMounted(() => {
 watch(
   () => collapse.value,
   (collapse: boolean) => {
-    if (unref(layout) === 'topLeft' || unref(layout) === 'cutMenu') {
+    if (unref(layout) === 'topLeft' || unref(layout) === 'cutMenu' || unref(layout) === 'mixed') {
       show.value = true
       return
     }
@@ -43,7 +43,7 @@ watch(
 watch(
   () => layout.value,
   (layout) => {
-    if (layout === 'top' || layout === 'cutMenu') {
+    if (layout === 'top' || layout === 'cutMenu' || layout === 'mixed') {
       show.value = true
     } else {
       if (unref(collapse)) {
@@ -61,7 +61,7 @@ watch(
     <router-link
       :class="[
         prefixCls,
-        layout !== 'classic' ? `${prefixCls}__Top` : '',
+        layout !== 'classic' && layout !== 'mixed' ? `${prefixCls}__Top` : '',
         'flex !h-[var(--logo-height)] items-center cursor-pointer pl-8px relative decoration-none overflow-hidden'
       ]"
       to="/"
@@ -75,7 +75,7 @@ watch(
         :class="[
           'ml-10px text-16px font-700',
           {
-            'text-[var(--logo-title-text-color)]': layout === 'classic',
+            'text-[var(--logo-title-text-color)]': layout === 'classic' || layout === 'mixed',
             'text-[var(--top-header-text-color)]':
               layout === 'topLeft' || layout === 'top' || layout === 'cutMenu'
           }

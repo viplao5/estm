@@ -18,12 +18,15 @@
       <div class="flex items-center space-x-32px hidden md:flex">
         <div class="text-right px-20px">
           <div class="text-12px text-gray-400 uppercase tracking-wider mb-4px">总成果数</div>
-          <div class="text-30px font-extrabold text-blue-600">
+          <div class="text-30px font-extrabold text-[#9d76ce]">
             <CountTo :start-val="0" :end-val="totalAchievementCount" :duration="2000" />
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 看板带: 实时指标 -->
+    <MetricsBar :metrics="dashboardMetrics" />
 
     <!-- 业务模块工作台 (Grid Layout for 10 items) -->
     <div v-if="packageId !== 10001">
@@ -167,6 +170,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/modules/user'
 import * as BusDashboardApi from '@/api/bus/dashboard'
 import * as NotifyMessageApi from '@/api/system/notify/message'
+import { MetricsBar } from '@/components/MetricsBar'
 
 defineOptions({ name: 'Index' })
 
@@ -181,16 +185,23 @@ const packageId = computed(() => userStore.getUser.packageId)
 
 // 模块卡片定义 - Added background colors for icon containers
 const moduleCards = reactive([
-  { name: '研发项目', icon: 'ep:folder', color: '#409EFF', bg: '#ecf5ff', count: 0, path: '/bus/project' },
+  { name: '研发项目', icon: 'ep:folder', color: '#9d76ce', bg: 'rgba(124, 77, 255, 0.08)', count: 0, path: '/bus/project' },
   { name: '知识产权', icon: 'ep:reading', color: '#67C23A', bg: '#f0f9eb', count: 0, path: '/bus/ip' },
   { name: '技术秘密', icon: 'ep:lock', color: '#E6A23C', bg: '#fdf6ec', count: 0, path: '/bus/secret' },
   { name: '论文著作', icon: 'ep:document', color: '#F56C6C', bg: '#fef0f0', count: 0, path: '/bus/paper' },
   { name: '标准管理', icon: 'ep:guide', color: '#909399', bg: '#f4f4f5', count: 0, path: '/bus/standard' },
   { name: '科技奖励', icon: 'ep:medal', color: '#E6A23C', bg: '#fdf6ec', count: 0, path: '/bus/award' },
-  { name: '产品与服务', icon: 'ep:goods', color: '#409EFF', bg: '#ecf5ff', count: 0, path: '/bus/product' },
+  { name: '产品与服务', icon: 'ep:goods', color: '#7C4DFF', bg: 'rgba(124, 77, 255, 0.08)', count: 0, path: '/bus/product' },
   { name: '科研平台', icon: 'ep:office-building', color: '#67C23A', bg: '#f0f9eb', count: 0, path: '/bus/platform' },
   { name: '技术人员', icon: 'ep:user', color: '#F56C6C', bg: '#fef0f0', count: 0, path: '/bus/staff' },
   { name: '资质管理', icon: 'ep:postcard', color: '#909399', bg: '#f4f4f5', count: 0, path: '/bus/qualification' },
+])
+
+const dashboardMetrics = computed(() => [
+  { title: '本月新增项目', value: moduleCards[0].count, icon: 'ep:document-add' },
+  { title: '待办审核数', value: reminderList.value.length, icon: 'ep:coordinate', color: '#FF9800' },
+  { title: '成果总数', value: totalAchievementCount.value, icon: 'ep:collection' },
+  { title: '授权专利总数', value: moduleCards[1].count, icon: 'ep:management', color: '#67C23A' }
 ])
 
 const totalAchievementCount = computed(() => moduleCards.reduce((acc, cur) => acc + cur.count, 0))
